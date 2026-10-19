@@ -79,3 +79,11 @@ export const shapePrompt = (p) => {
   delete o.categoryId; delete o.subCategoryId;
   return o;
 };
+
+// שירים שנוצרו בסטודיו ה-AI
+const songSchema = new Schema({
+  userId: ref('User'), title: { type: String, required: true, maxlength: 120 },
+  params: Schema.Types.Mixed, data: Schema.Types.Mixed,
+}, opts({ timestamps: { createdAt: true, updatedAt: false } }));
+songSchema.index({ userId: 1, createdAt: -1 });
+export const Song = model('Song', songSchema);

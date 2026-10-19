@@ -77,3 +77,22 @@ select { font: inherit; padding: .55rem .8rem; border: 1.5px solid var(--line); 
 .opt.right { background: var(--sage-soft); border-color: var(--sage); } .opt.wrong { background: #fdecee; border-color: var(--rose); } .opt:disabled { opacity: 1; cursor: default; }
 .result { margin-top: 1rem; padding: 1.2rem; border-radius: 16px; background: #fdecee; } .result.ok { background: var(--sage-soft); }
 @media (max-width: 600px) { .cont { flex-direction: column; align-items: stretch; } .piano { height: 110px; } }
+
+/* ---- v3: ספרייה, בחנים, סטודיו ---- */
+nav { overflow-x: auto; max-width: 100%; } nav .tab { white-space: nowrap; }
+.chip small { display: block; font-size: .65rem; opacity: .75; line-height: 1.1; }
+.chip.g { background: var(--sage-soft); } .chip.g.on { background: var(--sage); color: #25402f; }
+.grp { margin: 1rem 0 .2rem; color: var(--muted); font-weight: 500; }
+.fact { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: .6rem 0; }
+.invs { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .6rem; }
+.inv { display: grid; gap: .2rem; text-align: right; background: #fbf9fe; color: var(--ink); border: 1.5px solid var(--line); } .inv span { color: var(--muted); font-size: .85rem; } .inv.on { border-color: var(--lav); background: var(--lav-soft); }
+.piano .key.root { box-shadow: inset 0 -8px 0 var(--rose) !important; }
+.piano .key.on { background: var(--sage) !important; color: #25402f; }
+.check { display: grid; gap: .5rem; margin: 1.2rem 0; padding: 1rem 1.2rem; background: var(--sage-soft); border-radius: 16px; } .check p { margin: 0; }
+.cta { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; background: linear-gradient(135deg, var(--lav-soft), var(--sage-soft)); } .cta h2 { margin: 0 0 .2rem; }
+.quiz h2 { margin: .6rem 0 1rem; } .opts { display: grid; gap: .6rem; margin-bottom: 1rem; }
+.dots { display: flex; gap: .4rem; margin-bottom: .6rem; } .d { flex: 1; height: 6px; border-radius: 99px; background: var(--lav-soft); } .d.done { background: var(--sage); } .d.cur { background: var(--lav); }
+.tip.good { background: var(--sage-soft); border-color: var(--sage); }
+.big { font-size: 1.6rem; font-weight: 700; margin: .3rem 0; }
+.song h2 { margin: .6rem 0; } .sec { margin-top: 1.2rem; padding-top: .8rem; border-top: 1px solid var(--line); } .sec h3 { margin: 0; }
+.lyric { margin: .25rem 0; font-size: 1.05rem; line-height: 1.7; }

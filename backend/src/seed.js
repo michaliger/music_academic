@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { Category, SubCategory, Lesson, User } from './models.js';
 import { COURSES } from './content.js';
+import './content2.js';
 import { config } from './config.js';
 
 export async function seed() {

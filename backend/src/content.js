@@ -1,11 +1,11 @@
 // תוכן הלימוד. כדי להוסיף שיעור: הוסיפי אובייקט למערך lessons של תת-נושא ואתחלי את השרת.
-const h = (x) => ({ t: 'h', x });
-const p = (x) => ({ t: 'p', x });
-const tip = (x) => ({ t: 'tip', x });
-const play = (label, steps) => ({ t: 'play', label, steps });
-const seq = (...n) => n.map((x) => [x]);
-const q = (question, o, a, e) => ({ q: question, o, a, e });
-const C_MAJOR = seq(60, 62, 64, 65, 67, 69, 71, 72);
+export const h = (x) => ({ t: 'h', x });
+export const p = (x) => ({ t: 'p', x });
+export const tip = (x) => ({ t: 'tip', x });
+export const play = (label, steps) => ({ t: 'play', label, steps });
+export const seq = (...n) => n.map((x) => [x]);
+export const q = (question, o, a, e) => ({ q: question, o, a, e });
+export const C_MAJOR = seq(60, 62, 64, 65, 67, 69, 71, 72);
 
 export const COURSES = [
   { name: 'יסודות המוזיקה', subs: [

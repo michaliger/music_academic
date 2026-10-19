@@ -9,6 +9,7 @@ import { statsFor, emptyStats } from '../services/stats.js';
 
 const objectId = z.string().refine(mongoose.isValidObjectId, 'מזהה לא תקין');
 const promptSchema = z.object({ categoryId: objectId, subCategoryId: objectId, prompt: z.string().trim().min(3, 'הבקשה קצרה מדי').max(1000) });
+const checkSchema = z.object({ index: z.number().int().min(0).max(30), answer: z.number().int().min(0).max(9) });
 const quizSchema = z.object({ answers: z.array(z.number().int().min(0).max(9)).min(1).max(20) });
 const byOrder = (a, b) => (a.order ?? 999) - (b.order ?? 999);
 const notFound = (m) => Object.assign(new Error(m), { status: 404 });
@@ -53,7 +54,7 @@ r.get('/lessons/:id', requireAuth, async (req, res, next) => {
     ]);
     await User.updateOne({ _id: req.user.id }, { lastLessonId: lesson._id });
     res.json({
-      ...lesson.toJSON(), quiz: lesson.quiz.map(({ q, o }) => ({ q, o })),
+      ...lesson.toJSON(), quiz: lesson.quiz.map(({ q, o, p }) => ({ q, o, p })),
       unit: { id: unit.id, name: unit.name }, course: { id: unit.categoryId.id, name: unit.categoryId.name },
       nextId: nextL ? String(nextL._id) : null,
       progress: { completed: progress.completed, bestScore: progress.bestScore },
@@ -76,6 +77,16 @@ r.post('/lessons/:id/quiz', requireAuth, validate(quizSchema), async (req, res, 
     if (score >= 60 && !prog.completed) { prog.completed = true; prog.xp = lesson.xp; xpGained = lesson.xp; }
     await prog.save();
     res.json({ score, passed: score >= 60, xpGained, results });
+  } catch (e) { next(e); }
+});
+
+// בדיקה מיידית של תשובה בודדת בזמן הבוחן (כדי ללמד תוך כדי)
+r.post('/lessons/:id/check', requireAuth, validate(checkSchema), async (req, res, next) => {
+  try {
+    const lesson = await Lesson.findById(req.params.id);
+    const qz = lesson?.quiz[req.body.index];
+    if (!qz) throw notFound('השאלה לא נמצאה');
+    res.json({ correct: req.body.answer === qz.a, answer: qz.a, explain: qz.e });
   } catch (e) { next(e); }
 });
 

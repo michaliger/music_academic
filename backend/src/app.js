@@ -8,6 +8,7 @@ import learning from './routes/learning.js';
 import social from './routes/social.js';
 import classes from './routes/classes.js';
 import admin from './routes/admin.js';
+import songs from './routes/songs.js';
 import { errorHandler } from './middleware/error.js';
 
 const EP = [
@@ -15,6 +16,8 @@ const EP = [
   ['get', '/categories', 'קטגוריות ותת-קטגוריות', 0], ['get', '/courses', 'מפת הלימוד + התקדמות'],
   ['get', '/lessons/{id}', 'שיעור'], ['post', '/lessons/{id}/quiz', 'שליחת חידון'],
   ['post', '/prompts', 'שאלה למורה ה-AI'], ['get', '/prompts/me', 'היסטוריית שאלות'],
+  ['post', '/lessons/{id}/check', 'בדיקת תשובה בודדת בבוחן'],
+  ['post', '/songs/generate', 'יצירת שיר עם AI (מהלך, מבנה ומילים)'], ['get', '/songs', 'השירים שלי'], ['delete', '/songs/{id}', 'מחיקת שיר'],
   ['get', '/friends', 'חברות ולוח דירוג'], ['post', '/friends', 'שליחת בקשת חברות'],
   ['post', '/friends/{id}/accept', 'אישור בקשה'], ['delete', '/friends/{id}', 'הסרה/ביטול'],
   ['get', '/classes', 'הכיתות שלי'], ['post', '/classes', 'יצירת כיתה (מורה)'], ['post', '/classes/join', 'הצטרפות עם קוד'],
@@ -39,6 +42,7 @@ export function createApp() {
   app.use('/api/friends', social);
   app.use('/api/classes', classes);
   app.use('/api/admin', admin);
+  app.use('/api/songs', songs);
   app.use('/api', learning);
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(spec));
   app.get('/api/health', (_req, res) => res.json({ ok: true }));

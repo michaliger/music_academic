@@ -38,7 +38,7 @@ export default function QuizRunner({ lesson, go, onExit }) {
         {!res.passed && <p>צריך 60% כדי להשלים. קראי שוב ונסי עוד פעם, זה חלק מהלמידה.</p>}
         <div className="row">
           <button className="ghost" onClick={retry}>ניסיון נוסף</button>
-          {res.passed && <button onClick={() => (lesson.nextId ? go('lesson', lesson.nextId) : go('home'))}>{lesson.nextId ? 'לשיעור הבא ▶' : 'חזרה למפה'}</button>}
+          {res.passed && <button onClick={() => (lesson.nextId ? go('lesson', lesson.nextId) : go('map'))}>{lesson.nextId ? 'לשיעור הבא ▶' : 'חזרה למפה'}</button>}
           <button className="link" onClick={onExit}>חזרה לשיעור</button>
         </div>
       </section>

@@ -2,7 +2,8 @@
 import { useState } from 'react';
 import { ROLE_LABEL } from './utils/format.js';
 import Auth from './pages/Auth.jsx';
-import Home from './pages/Home.jsx';
+import Landing from './pages/Landing.jsx';
+import LearningMap from './pages/Map.jsx';
 import Lesson from './pages/Lesson.jsx';
 import Library from './pages/Library.jsx';
 import Practice from './pages/Practice.jsx';
@@ -13,7 +14,7 @@ import Classes from './pages/Classes.jsx';
 import Ask from './pages/Ask.jsx';
 import Admin from './pages/Admin.jsx';
 
-const TABS = [['home', 'מפת הלימוד'], ['library', 'ספרייה'], ['practice', 'תרגול'], ['studio', 'סטודיו AI'], ['compose', 'חדר הלחנה'], ['friends', 'חברות'], ['classes', 'כיתות'], ['ask', 'שאלי את המורה']];
+const TABS = [['home', 'בית'], ['map', 'מפת הלימוד'], ['library', 'ספרייה'], ['practice', 'תרגול'], ['studio', 'סטודיו AI'], ['compose', 'חדר הלחנה'], ['friends', 'חברות'], ['classes', 'כיתות'], ['ask', 'שאלי את המורה']];
 
 export default function App() {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user') || 'null'));
@@ -26,7 +27,8 @@ export default function App() {
 
   const logout = () => { localStorage.clear(); setUser(null); };
   const tabs = user.role === 'admin' ? [...TABS, ['admin', 'ניהול']] : TABS;
-  const active = view.tab === 'lesson' ? 'home' : view.tab;
+  const active = view.tab === 'lesson' ? 'map' : view.tab;
+  const wide = ['home', 'map', 'library'].includes(view.tab); // these screens use the full page width
 
   return (
     <>
@@ -35,8 +37,9 @@ export default function App() {
         <nav>{tabs.map(([key, label]) => <button key={key} className={`tab ${active === key ? 'on' : ''}`} onClick={() => go(key)}>{label}</button>)}</nav>
         <div className="who">{user.name} · {ROLE_LABEL[user.role]} <button className="link" onClick={logout}>יציאה</button></div>
       </header>
-      <main>
-        {view.tab === 'home' && <Home user={user} go={go} />}
+      <main className={wide ? 'wide' : ''}>
+        {view.tab === 'home' && <Landing user={user} go={go} />}
+        {view.tab === 'map' && <LearningMap user={user} go={go} />}
         {view.tab === 'lesson' && <Lesson id={view.arg} go={go} />}
         {view.tab === 'library' && <Library />}
         {view.tab === 'practice' && <Practice />}

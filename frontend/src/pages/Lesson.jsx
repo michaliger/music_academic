@@ -42,7 +42,7 @@ export default function LessonView({ id, go }) {
 
   return (
     <>
-      <button className="link" onClick={() => go('home')}>← חזרה למפה</button>
+      <button className="link" onClick={() => go('map')}>← חזרה למפה</button>
       {!quiz && (
         <article className="card lesson-page">
           <div className="tags"><span>{L.course.name}</span><span className="alt">{L.unit.name}</span><time>{L.minutes} דקות</time></div>

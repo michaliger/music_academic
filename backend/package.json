@@ -4,6 +4,7 @@
   "description": "REST API for the Music Academy learning platform",
   "type": "module",
   "scripts": {
+    "ai:check": "node scripts/check-ai.js",
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"

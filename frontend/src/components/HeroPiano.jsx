@@ -2,11 +2,12 @@
 // and reacts to real presses, either with the mouse or with the computer keyboard.
 import { useEffect, useRef, useState } from 'react';
 import Piano, { keyCenter } from './Piano.jsx';
-import { playNow } from '../music/audio.js';
+import { playBell, playNow } from '../music/audio.js';
 
 const FROM = 48; // C3
 const TO = 83; // B5
-const MELODY = [60, 64, 67, 72, 71, 67, 64, 67, 69, 72, 76, 72, 69, 65, 62, 67, 64, 60, 57, 60, 64, 69, 67, 64]; // a friendly C-major tune
+// a bouncy, lullaby-like C-major tune (original)
+const MELODY = [64, 67, 72, 71, 67, 69, 72, 76, 74, 72, 71, 67, 69, 67, 64, 62, 60, 64, 67, 69, 67, 64, 62, 60];
 const GLYPHS = ['♪', '♫', '♩', '♬'];
 const COLORS = ['var(--gold)', 'var(--coral)', 'var(--mint)', '#ffffff'];
 const FLOAT_MS = 3200; // must match the floatUp animation length in CSS
@@ -40,9 +41,10 @@ export default function HeroPiano() {
       if (Date.now() < pausedUntil.current) return;
       const m = MELODY[step++ % MELODY.length];
       setActive([m]);
+      playBell(m); // sounds only when the background music is on
       spawn(keyCenter(m, FROM, TO));
       setTimeout(() => setActive([]), 380);
-    }, 640);
+    }, 520);
     return () => clearInterval(timer);
   }, []);
 
@@ -69,7 +71,8 @@ export default function HeroPiano() {
 
   return (
     <div className="grand">
-      <div className="grand-lid"><span className="grand-line" /></div>
+      <div className="grand-glow" aria-hidden="true" />
+      <div className="grand-lid"><span className="grand-line" /><span className="grand-shine" /></div>
       <div className="grand-keys">
         <div className="floaters" aria-hidden="true">
           {floaters.map((f) => (

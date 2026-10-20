@@ -92,24 +92,45 @@ function padChord(notes, t) {
   }
 }
 
-function sparkle(m, t) {
-  const o = ctx.createOscillator();
+/** Music-box note: a bright sine with a small high partial and a quick, gentle decay. Used for the cute melody. */
+function bell(m, t, vol = 0.05, out = bus) {
+  const f = freq(m);
   const g = ctx.createGain();
-  o.type = 'sine';
-  o.frequency.value = freq(m);
   g.gain.setValueAtTime(0.0001, t);
-  g.gain.linearRampToValueAtTime(0.05, t + 0.02);
-  g.gain.exponentialRampToValueAtTime(0.0006, t + 2.4);
-  o.connect(g).connect(bus);
-  o.start(t);
-  o.stop(t + 2.5);
+  g.gain.linearRampToValueAtTime(vol, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0006, t + 1.8);
+  g.connect(out);
+  for (const [mult, level] of [[1, 1], [4, 0.18]]) {
+    const o = ctx.createOscillator();
+    const og = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.value = f * mult;
+    og.gain.value = level;
+    o.connect(og).connect(g);
+    o.start(t);
+    o.stop(t + 1.9);
+  }
+}
+
+/** A single soft music-box note for the landing-page demo (only audible while the background music is on). */
+export function playBell(m) {
+  if (!on) return;
+  bell(m, ctx.currentTime, 0.07);
+}
+
+/** Cute lullaby-like arpeggio over the chord: up through the chord tones, a little skip, and back down. */
+function arpeggio(notes, t) {
+  const [a, b, c, d] = notes.map((n) => n + 24);
+  const pattern = [a, b, c, d, c, b, c, a];
+  pattern.forEach((m, i) => bell(m, t + 0.9 + i * 0.42, i === 3 || i === 7 ? 0.06 : 0.04));
 }
 
 function scheduleChord() {
   const t = ctx.currentTime + 0.05;
-  padChord(CHORDS[step % CHORDS.length], t);
-  const count = 2 + Math.floor(Math.random() * 2);
-  for (let i = 0; i < count; i++) sparkle(SPARKLE[Math.floor(Math.random() * SPARKLE.length)], t + 1 + i * 1.7 + Math.random() * 0.6);
+  const chord = CHORDS[step % CHORDS.length];
+  padChord(chord, t);
+  arpeggio(chord, t);
+  bell(SPARKLE[Math.floor(Math.random() * SPARKLE.length)], t + 4.6, 0.035); // one random twinkle before the next chord
   step += 1;
 }
 

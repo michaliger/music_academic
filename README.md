@@ -63,7 +63,7 @@ and an admin dashboard. Built as a production-minded MVP (REST API + MongoDB + R
    ```bash
    cd backend
    cp .env.example .env      # Windows PowerShell: Copy-Item .env.example .env
-   # edit .env: MONGODB_URI, JWT_SECRET (optionally OPENAI_API_KEY)
+   # edit .env: MONGODB_URI, JWT_SECRET (optionally GEMINI_API_KEY)
    npm install
    npm run dev               # http://localhost:4000  (Swagger: /api/docs)
    ```
@@ -80,7 +80,7 @@ and an admin dashboard. Built as a production-minded MVP (REST API + MongoDB + R
 ```bash
 docker compose up --build     # app: http://localhost:8080 · API docs: http://localhost:8080/api/docs
 ```
-Optional variables (`JWT_SECRET`, `OPENAI_API_KEY`, `ADMIN_PHONE`, `ADMIN_PASSWORD`) are read from your shell or a root `.env` file. Database only: `docker compose up -d mongo`.
+Optional variables (`JWT_SECRET`, `GEMINI_API_KEY`, `OPENAI_API_KEY`, `ADMIN_PHONE`, `ADMIN_PASSWORD`) are read from your shell or a root `.env` file. Database only: `docker compose up -d mongo`.
 
 > Fresh start recommended: if you ran an earlier version against the same Atlas database, drop the database first (collection names changed to match the task: `users`, `categories`, `sub_categories`, `prompts`).
 
@@ -89,7 +89,9 @@ Optional variables (`JWT_SECRET`, `OPENAI_API_KEY`, `ADMIN_PHONE`, `ADMIN_PASSWO
 |---|---|
 | `MONGODB_URI` | Atlas or local MongoDB connection string |
 | `JWT_SECRET` | Signing key for JWTs (use a long random value) |
-| `OPENAI_API_KEY` | Optional. Without it every AI feature uses the built-in demo engine behind the same interface |
+| `GEMINI_API_KEY` | Optional. Google Gemini (preferred provider). Verify with `npm run ai:check` |
+| `GEMINI_MODEL` | Default `gemini-2.5-flash` |
+| `OPENAI_API_KEY` | Optional alternative provider. Without it every AI feature uses the built-in demo engine behind the same interface |
 | `OPENAI_MODEL` | Default `gpt-4o-mini` |
 | `ADMIN_PHONE`, `ADMIN_PASSWORD` | Admin account created on first start — change before deploying |
 

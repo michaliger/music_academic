@@ -316,3 +316,25 @@ html[dir=rtl] .tseg i { inset: 0 0 0 auto; }
 .path { grid-template-columns: repeat(5, 1fr); }
 @media (max-width: 1100px) { .path { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 640px) { .path { grid-template-columns: repeat(2, 1fr); } }
+
+/* ================= v6: striking landing ================= */
+.hero-panel { isolation: isolate; padding-bottom: 2.2rem; }
+.hero-panel::before, .hero-panel::after { content: ''; position: absolute; z-index: -1; border-radius: 50%; filter: blur(60px); opacity: .55; animation: drift 14s ease-in-out infinite alternate; }
+.hero-panel::before { width: 460px; height: 460px; inset-inline-start: -120px; top: -140px; background: #ff9d86; }
+.hero-panel::after { width: 420px; height: 420px; inset-inline-end: -100px; bottom: -160px; background: #6fd8b8; animation-delay: -6s; }
+@keyframes drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(60px, 40px) scale(1.2); } }
+.hero-text h1 { background: linear-gradient(100deg, #fff 20%, #ffe2a8 45%, #ffc2d1 60%, #fff 80%); background-size: 220% auto; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 7s linear infinite; }
+@keyframes shimmer { to { background-position: 220% center; } }
+.hero-text small { display: inline-block; padding: .25rem .8rem; border-radius: 999px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); }
+
+.grand-glow { position: absolute; inset: 40% 6% -14% 6%; z-index: -1; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(245,196,106,.55), rgba(255,157,134,.25) 45%, transparent 70%); filter: blur(30px); }
+.grand-shine { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; }
+.grand-shine::after { content: ''; position: absolute; top: 0; bottom: 0; width: 22%; left: -30%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.28), transparent); transform: skewX(-18deg); animation: sweep 6s ease-in-out infinite; }
+@keyframes sweep { 0%, 55% { left: -30%; } 100% { left: 130%; } }
+
+/* pressed keys glow in a colour per note */
+.piano.real .key.white.on, .piano.real .key.white:active { background: linear-gradient(180deg, color-mix(in srgb, var(--kc) 55%, #fff), var(--kc)) !important; box-shadow: 0 0 22px 2px var(--kc), inset 0 -2px 0 rgba(0,0,0,.08) !important; }
+.piano.real .key.black.on, .piano.real .key.black:active { background: linear-gradient(180deg, var(--kc), #2b2210) !important; box-shadow: 0 0 18px 2px var(--kc) !important; }
+.floater { text-shadow: 0 0 14px currentColor, 0 2px 10px rgba(0,0,0,.25); font-size: 2.1rem; }
+.floater:nth-child(3n) { font-size: 1.5rem; } .floater:nth-child(4n) { font-size: 2.6rem; }
+@media (prefers-reduced-motion: reduce) { .hero-panel::before, .hero-panel::after, .hero-text h1, .grand-shine::after { animation: none; } }

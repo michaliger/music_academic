@@ -12,6 +12,7 @@ services:
     environment:
       MONGODB_URI: mongodb://mongo:27017/music_academy
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ADMIN_PHONE: ${ADMIN_PHONE:-0500000000}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin1234}

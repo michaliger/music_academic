@@ -4,6 +4,9 @@ import { playNow, playSteps } from '../music/audio.js';
 const WHITE = [0, 2, 4, 5, 7, 9, 11];
 const NAMES = { 0: 'דו', 2: 'רה', 4: 'מי', 5: 'פה', 7: 'סול', 9: 'לה', 11: 'סי' };
 
+/** Soft colour per pitch class: pressed keys glow in it on the landing piano. */
+const kc = (m) => `hsl(${(m % 12) * 30 + 10} 85% 72%)`;
+
 /** Horizontal centre (in %) of a note on a keyboard spanning from..to; used to release floating notes above the right key. */
 export function keyCenter(m, from, to) {
   let whites = 0, index = 0;
@@ -30,7 +33,7 @@ export default function Piano({ highlight = [], active = [], rootPc = null, from
         const label = k.white && NAMES[k.m % 12] && (!namesOnC || k.m % 12 === 0) ? NAMES[k.m % 12] : null;
         return (
           <button key={k.m} aria-label={`note ${k.m}`} onClick={() => { playNow([k.m]); onPress?.(k.m, k.white ? k.i * u + u / 2 : k.i * u); }} className={cls}
-            style={k.white ? { left: `${k.i * u}%`, width: `${u}%` } : { left: `${k.i * u - u * 0.3}%`, width: `${u * 0.6}%` }}>
+            style={k.white ? { left: `${k.i * u}%`, width: `${u}%`, '--kc': kc(k.m) } : { left: `${k.i * u - u * 0.3}%`, width: `${u * 0.6}%`, '--kc': kc(k.m) }}>
             {label && <span>{label}</span>}
           </button>
         );

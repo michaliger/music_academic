@@ -4,11 +4,31 @@ import { httpError } from '../utils/httpError.js';
 /**
  * AI integration interface. Every AI feature goes through askModel(); without an API key the
  * callers fall back to deterministic demo content, so the app works fully offline.
+ * Providers: Google Gemini (GEMINI_API_KEY) is preferred, OpenAI (OPENAI_API_KEY) is the alternative.
  */
-export const isAiEnabled = () => Boolean(config.openaiKey);
+export const aiProvider = () => (config.geminiKey ? 'gemini' : config.openaiKey ? 'openai' : null);
+export const isAiEnabled = () => aiProvider() !== null;
 
-/** One chat-completion call. Returns the message text (a JSON string when json = true). */
-export async function askModel({ system, user, json = false, temperature = 0.7 }) {
+/** Gemini generateContent call. Returns the text of the first candidate. */
+async function askGemini({ system, user, json, temperature }) {
+  const call = async (model) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': config.geminiKey },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents: [{ role: 'user', parts: [{ text: user }] }],
+      generationConfig: { temperature, ...(json && { responseMimeType: 'application/json' }) },
+    }),
+  });
+  let res = await call(config.geminiModel);
+  if (res.status === 404 && config.geminiModel !== 'gemini-flash-latest') res = await call('gemini-flash-latest'); // model name retired or mistyped
+  if (!res.ok) throw new Error(`Gemini ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  const data = await res.json();
+  return (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();
+}
+
+/** OpenAI chat-completions call. */
+async function askOpenAI({ system, user, json, temperature }) {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.openaiKey}` },
@@ -18,9 +38,20 @@ export async function askModel({ system, user, json = false, temperature = 0.7 }
       messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
     }),
   });
-  if (!res.ok) throw httpError(502, 'שירות ה-AI אינו זמין כרגע');
+  if (!res.ok) throw new Error(`OpenAI ${res.status}: ${(await res.text()).slice(0, 300)}`);
   const data = await res.json();
   return data.choices?.[0]?.message?.content?.trim() || '';
+}
+
+/** One model call. Returns the text (a JSON string when json = true). The real reason of a failure is logged, the client gets a 502. */
+export async function askModel({ system, user, json = false, temperature = 0.7 }) {
+  try {
+    const args = { system, user, json, temperature };
+    return aiProvider() === 'gemini' ? await askGemini(args) : await askOpenAI(args);
+  } catch (e) {
+    console.error('AI request failed:', e.message);
+    throw httpError(502, 'שירות ה-AI אינו זמין כרגע');
+  }
 }
 
 /** Demo tutor answer, used when no API key is configured. */
@@ -34,16 +65,18 @@ export function demoAnswer({ category, subCategory, summary, prompt }) {
     '2. חפשי את הדפוס: כמעט כל כלל בתאוריה נולד מצליל שנשמע טוב.',
     '3. נסי ליישם: מצאי שיר שאת אוהבת וזהי בו את הנושא.', '',
     'תרגיל: כתבי מנגינה של 4 תיבות המדגימה את הנושא, ונגני אותה לאט עם מטרונום.', '',
-    '(תשובה זו נוצרה במנוע ההדגמה. הגדירי OPENAI_API_KEY לקבלת שיעורים מלאים מ-GPT.)',
+    '(תשובה זו נוצרה במנוע ההדגמה. הגדירי GEMINI_API_KEY בקובץ .env לקבלת שיעורים מלאים מ-Gemini.)',
   ].join('\n');
 }
 
 /** Free-form question from the "ask the teacher" screen. */
 export async function answerPrompt(ctx) {
   if (!isAiEnabled()) return demoAnswer(ctx);
-  const answer = await askModel({
-    system: 'את/ה מורה למוזיקה מקצועי. כתוב/י שיעור ברור בעברית: הסבר, דוגמאות מוזיקליות, ותרגיל קצר בסוף.',
-    user: `קטגוריה: ${ctx.category}\nתת-קטגוריה: ${ctx.subCategory}\nבקשה: ${ctx.prompt}`,
-  });
-  return answer || demoAnswer(ctx);
+  try {
+    const answer = await askModel({
+      system: 'את/ה מורה למוזיקה מקצועי. כתוב/י שיעור ברור בעברית: הסבר, דוגמאות מוזיקליות, ותרגיל קצר בסוף.',
+      user: `קטגוריה: ${ctx.category}\nתת-קטגוריה: ${ctx.subCategory}\nבקשה: ${ctx.prompt}`,
+    });
+    return answer || demoAnswer(ctx);
+  } catch { return demoAnswer(ctx); } // the student still gets an answer if the AI service is down
 }

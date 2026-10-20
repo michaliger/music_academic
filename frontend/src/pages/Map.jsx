@@ -2,16 +2,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
 import Bar from '../components/Bar.jsx';
-
-// Icon and one-line description per course (falls back to a generic note for new courses).
-const COURSE_INFO = {
-  'יסודות המוזיקה': ['🎹', 'מקלדת, תווים, קצב וסימני הבעה: הבסיס של הכול'],
-  'סולמות ואינטרוולים': ['🎼', 'איך בנויים סולמות, מודים והמרחקים בין צלילים'],
-  'הרמוניה': ['🎶', 'אקורדים, ספטימות וקדנצות: איך צלילים עובדים יחד'],
-  'הלחנה ויצירה': ['✍️', 'מבנה שיר, מלודיה וליווי עד לשיר הראשון שלך'],
-  'חוש שמיעה': ['👂', 'מזהים אינטרוולים ואקורדים באוזן'],
-};
-const infoOf = (name) => COURSE_INFO[name] || ['🎵', ''];
+import { infoOf, summarize } from '../utils/courses.js';
 
 export default function LearningMap({ user, go }) {
   const [data, setData] = useState(null);
@@ -20,7 +11,8 @@ export default function LearningMap({ user, go }) {
   if (err) return <div className="error">{err}</div>;
   if (!data) return <p className="muted">טוען...</p>;
 
-  const lessons = data.courses.flatMap((c) => c.subCategories.flatMap((s) => s.lessons));
+  const { lessons, minutes } = summarize(data.courses);
+  const leftMinutes = lessons.filter((l) => !l.done).reduce((n, l) => n + (l.minutes || 0), 0);
   const percent = lessons.length ? Math.round((100 * data.completed) / lessons.length) : 0;
   const last = lessons.find((l) => l.id === data.lastLessonId);
   const next = last && !last.done ? last : lessons.find((l) => !l.done); // where to continue
@@ -42,6 +34,27 @@ export default function LearningMap({ user, go }) {
         ) : <div className="mb-next">🎉 סיימת את כל השיעורים! אפשר להתאמן באימון השמיעה או להלחין.</div>}
       </section>
 
+      <section className="card track" aria-label="מסלול הלימוד כולו">
+        <div className="track-head">
+          <h3>המסלול כולו: {lessons.length} שיעורים, כ-{Math.round(minutes / 60)} שעות</h3>
+          <span className="muted">{lessons.length - data.completed ? `נשארו ${lessons.length - data.completed} שיעורים (כ-${Math.max(1, Math.round(leftMinutes / 60))} שעות) עד הסוף` : 'סיימת את כל המסלול!'}</span>
+        </div>
+        <div className="track-line">
+          {data.courses.map((c, i) => {
+            const all = c.subCategories.flatMap((u) => u.lessons);
+            const done = all.filter((l) => l.done).length;
+            return (
+              <a key={c.id} href={`#course-${c.id}`} className={`tseg c${i % 5}`} style={{ flexGrow: all.length }} title={`${c.name}: ${done}/${all.length}`}
+                onClick={(e) => { e.preventDefault(); document.getElementById(`course-${c.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
+                <i style={{ width: `${(100 * done) / all.length}%` }} />
+                <span>{infoOf(c.name)[0]} <b>{c.name}</b> <small>{done}/{all.length}</small></span>
+              </a>
+            );
+          })}
+          <span className="flag" title="סוף המסלול">🏁</span>
+        </div>
+      </section>
+
       <div className="legend" aria-label="מקרא">
         <span><i className="dot done">✓</i> הושלם (עם הציון)</span>
         <span><i className="dot next">▶</i> השיעור הבא</span>
@@ -55,7 +68,7 @@ export default function LearningMap({ user, go }) {
           const done = all.filter((l) => l.done).length;
           const [icon, blurb] = infoOf(course.name);
           return (
-            <section key={course.id} className={`card course c${ci % 5}`}>
+            <section key={course.id} id={`course-${course.id}`} className={`card course c${ci % 5}`}>
               <div className="course-head">
                 <span className="cicon">{icon}</span>
                 <div><h3>{course.name}</h3><small className="muted">{blurb}</small></div>

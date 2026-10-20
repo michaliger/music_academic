@@ -17,3 +17,12 @@ test('every quiz question has a valid correct answer and an explanation', () => 
     }
   }
 });
+
+test('inline checks and play blocks are well formed', () => {
+  for (const l of lessons) {
+    for (const b of l.blocks) {
+      if (b.t === 'check') { expect(b.a).toBeGreaterThanOrEqual(0); expect(b.a).toBeLessThan(b.o.length); expect(b.e).toBeTruthy(); }
+      if (b.t === 'play') for (const step of b.steps) for (const m of step) expect(Number.isInteger(m)).toBe(true);
+    }
+  }
+});

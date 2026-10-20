@@ -7,7 +7,7 @@ and an admin dashboard. Built as a production-minded MVP (REST API + MongoDB + R
 ## Features
 | Area | What it does |
 |---|---|
-| Learning | 5 courses → units → 24 lessons, interactive piano examples, short quizzes with instant explanations, XP, "continue where I stopped" |
+| Learning | 9 courses → units → 73 lessons (232 quiz questions, ~12 hours), including a full course on building chords from intervals and tones, interactive piano examples, short quizzes with instant explanations, XP, "continue where I stopped" |
 | Library | Pick a root + chord type (19) or scale/mode (14): the keyboard moves, all inversions, formulas, diatonic chords |
 | AI tutor | Prompts by category / sub-category, stored as learning history (task requirement) |
 | AI song studio | Mood + style + theme → chord progression, structure and lyrics |
@@ -140,3 +140,15 @@ and a composition room whose harmony feedback comes from a deterministic theory 
 
 ## Deployment (bonus)
 Backend → Render (`render.yaml` Blueprint included; add `MONGODB_URI` etc. in the dashboard) or Railway (start command `npm start`). Frontend → Vercel / Netlify with `VITE_API_URL=https://<api-host>/api`.
+
+
+## Content map (curriculum)
+
+Basics → Scales & intervals → Harmony → **Building chords by tones** (intervals, stacking thirds, formulas, sevenths and extensions, inversions, slash chords, voicings) → Advanced harmony → Keys & modes → Songwriting → Rhythm, form & arranging → Ear training.
+All lessons are JSON files in `backend/src/data/curriculum/`; the order is set in `index.js`. Restarting the API re-seeds new lessons.
+
+## UI notes
+
+- Landing: realistic piano (mouse or computer keys `A S D F...`), floating notes, optional quiet background music (generated with Web Audio, starts only after a click, volume slider).
+- Map: whole-course track with a finish flag, remaining lessons/hours, and every course visible at once.
+- Lesson: wide layout with a side panel (facts, outline, lessons in the unit, free piano).

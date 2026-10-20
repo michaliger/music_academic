@@ -1,12 +1,22 @@
-// Landing-page piano: plays itself silently (keys light up, notes float up) and reacts to real key presses.
+// Landing-page piano: a realistic three-octave keyboard that plays itself silently (keys light up, notes float up)
+// and reacts to real presses, either with the mouse or with the computer keyboard.
 import { useEffect, useRef, useState } from 'react';
-import Piano from './Piano.jsx';
+import Piano, { keyCenter } from './Piano.jsx';
+import { playNow } from '../music/audio.js';
 
-const MELODY = [60, 64, 67, 72, 71, 67, 64, 67, 69, 72, 76, 72, 69, 65, 62, 67, 64, 60]; // a friendly C-major tune
+const FROM = 48; // C3
+const TO = 83; // B5
+const MELODY = [60, 64, 67, 72, 71, 67, 64, 67, 69, 72, 76, 72, 69, 65, 62, 67, 64, 60, 57, 60, 64, 69, 67, 64]; // a friendly C-major tune
 const GLYPHS = ['♪', '♫', '♩', '♬'];
 const COLORS = ['var(--gold)', 'var(--coral)', 'var(--mint)', '#ffffff'];
 const FLOAT_MS = 3200; // must match the floatUp animation length in CSS
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
+
+// computer keys -> notes (home row = white keys from C4, row above = black keys)
+const KEYMAP = Object.fromEntries([
+  ...[...'asdfghjkl;'].map((k, i) => [k, [60, 62, 64, 65, 67, 69, 71, 72, 74, 76][i]]),
+  ...[...'wetyuop'].map((k, i) => [k, [61, 63, 66, 68, 70, 73, 75][i]]),
+]);
 
 export default function HeroPiano() {
   const [floaters, setFloaters] = useState([]);
@@ -17,24 +27,38 @@ export default function HeroPiano() {
   /** Adds one floating note above the keyboard at `left`% (it removes itself when its animation ends). */
   const spawn = (left) => {
     const id = idRef.current++;
-    const note = { id, left, glyph: pick(GLYPHS), color: pick(COLORS), dx: Math.round(Math.random() * 120 - 60), rot: Math.round(Math.random() * 50 - 25) };
+    const note = { id, left, glyph: pick(GLYPHS), color: pick(COLORS), dx: Math.round(Math.random() * 140 - 70), rot: Math.round(Math.random() * 50 - 25) };
     setFloaters((list) => [...list.slice(-24), note]);
     setTimeout(() => setFloaters((list) => list.filter((f) => f.id !== id)), FLOAT_MS);
   };
 
+  // the self-playing demo
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
     let step = 0;
-    const WHITES = 14; // keys 60..83 -> 14 white keys
     const timer = setInterval(() => {
       if (Date.now() < pausedUntil.current) return;
       const m = MELODY[step++ % MELODY.length];
       setActive([m]);
-      const whiteIndex = [0, 2, 4, 5, 7, 9, 11].indexOf(m % 12) + 7 * Math.floor((m - 60) / 12);
-      spawn(((whiteIndex + 0.5) * 100) / WHITES);
+      spawn(keyCenter(m, FROM, TO));
       setTimeout(() => setActive([]), 380);
-    }, 620);
+    }, 640);
     return () => clearInterval(timer);
+  }, []);
+
+  // playing with the computer keyboard
+  useEffect(() => {
+    const onKey = (e) => {
+      const m = KEYMAP[e.key.toLowerCase()];
+      if (m === undefined || e.repeat || e.ctrlKey || e.metaKey || e.altKey || /input|textarea|select/i.test(e.target.tagName)) return;
+      playNow([m]);
+      pausedUntil.current = Date.now() + 4000;
+      setActive([m]);
+      spawn(keyCenter(m, FROM, TO));
+      setTimeout(() => setActive([]), 260);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   const onPress = (_note, centerPercent) => {
@@ -44,13 +68,17 @@ export default function HeroPiano() {
   };
 
   return (
-    <div className="hero-piano">
-      <div className="floaters" aria-hidden="true">
-        {floaters.map((f) => (
-          <span key={f.id} className="floater" style={{ left: `${f.left}%`, color: f.color, '--dx': `${f.dx}px`, '--rot': `${f.rot}deg` }}>{f.glyph}</span>
-        ))}
+    <div className="grand">
+      <div className="grand-lid"><span className="grand-line" /></div>
+      <div className="grand-keys">
+        <div className="floaters" aria-hidden="true">
+          {floaters.map((f) => (
+            <span key={f.id} className="floater" style={{ left: `${f.left}%`, color: f.color, '--dx': `${f.dx}px`, '--rot': `${f.rot}deg` }}>{f.glyph}</span>
+          ))}
+        </div>
+        <Piano from={FROM} to={TO} active={active} onPress={onPress} real namesOnC />
       </div>
-      <Piano from={60} to={83} active={active} onPress={onPress} />
+      <p className="grand-hint">לחצי על הקלידים, או נגני במקלדת של המחשב: <bdi dir="ltr">A S D F G H J K L</bdi></p>
     </div>
   );
 }

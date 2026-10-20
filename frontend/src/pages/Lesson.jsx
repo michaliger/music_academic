@@ -1,7 +1,7 @@
 // Lesson page: content blocks, inline self-checks, share, and the quiz entry point.
 import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
-import { PlayBlock } from '../components/Piano.jsx';
+import Piano, { PlayBlock } from '../components/Piano.jsx';
 import { playSteps } from '../music/audio.js';
 import QuizRunner from './Quiz.jsx';
 
@@ -23,12 +23,14 @@ export default function LessonView({ id, go }) {
   const [quiz, setQuiz] = useState(false);
   const [err, setErr] = useState('');
   const [msg, setMsg] = useState('');
+  const [map, setMap] = useState(null); // the course tree, for the "in this unit" list
 
   useEffect(() => {
     setL(null); setQuiz(false); setErr(''); setMsg('');
     api(`/lessons/${id}`).then(setL).catch((e) => setErr(e.message));
     window.scrollTo(0, 0);
   }, [id]);
+  useEffect(() => { api('/courses').then(setMap).catch(() => {}); }, [id]);
 
   async function share() {
     const url = `${location.origin}/?lesson=${id}`;
@@ -40,28 +42,66 @@ export default function LessonView({ id, go }) {
   if (err) return <div className="error">{err}</div>;
   if (!L) return <p className="muted">טוען...</p>;
 
+  const unit = map?.courses.flatMap((c) => c.subCategories).find((u) => u.id === L.unit.id);
+  const headings = L.blocks.filter((b) => b.t === 'h');
+  const idx = unit ? unit.lessons.findIndex((l) => l.id === id) : -1;
+  const nextLesson = unit && idx >= 0 ? unit.lessons[idx + 1] : null;
+
   return (
     <>
       <button className="link" onClick={() => go('map')}>← חזרה למפה</button>
-      {!quiz && (
-        <article className="card lesson-page">
-          <div className="tags"><span>{L.course.name}</span><span className="alt">{L.unit.name}</span><time>{L.minutes} דקות</time></div>
-          <h1>{L.title}</h1>
-          {L.blocks.map((b, i) => b.t === 'h' ? <h3 key={i}>{b.x}</h3> : b.t === 'p' ? <p key={i}>{b.x}</p>
-            : b.t === 'tip' ? <div key={i} className="tip">💡 {b.x}</div> : b.t === 'check' ? <Check key={i} b={b} /> : <PlayBlock key={i} label={b.label} steps={b.steps} />)}
-          <div className="row">
-            <button className="ghost" onClick={share}>שתפי עם חברה 🔗</button>
-            <button className="ghost" onClick={() => go('ask', { categoryId: L.course.id, subCategoryId: L.unit.id })}>שאלי את המורה 💬</button>
-            {msg && <small className="muted">{msg}</small>}
-          </div>
-        </article>
-      )}
-      {!quiz ? (
-        <section className="card cta">
-          <div><h2>מוכנה לבחון את עצמך? 🎯</h2><p className="muted">{L.quiz.length} שאלות קצרות, עם הסבר אחרי כל תשובה{L.progress.completed ? ` · הציון הכי טוב שלך: ${L.progress.bestScore}%` : ''}.</p></div>
-          <button onClick={() => { setQuiz(true); window.scrollTo(0, 0); }}>{L.progress.completed ? 'בוחן נוסף' : 'התחילי בוחן'} ▶</button>
-        </section>
-      ) : <QuizRunner lesson={L} go={go} onExit={() => setQuiz(false)} />}
+      <div className="lesson-grid">
+        <div className="lesson-main">
+          {!quiz && (
+            <article className="card lesson-page">
+              <div className="tags"><span>{L.course.name}</span><span className="alt">{L.unit.name}</span><time>{L.minutes} דקות</time></div>
+              <h1>{L.title}</h1>
+              {L.blocks.map((b, i) => b.t === 'h' ? <h3 key={i}>{b.x}</h3> : b.t === 'p' ? <p key={i}>{b.x}</p>
+                : b.t === 'tip' ? <div key={i} className="tip">💡 {b.x}</div> : b.t === 'check' ? <Check key={i} b={b} /> : <PlayBlock key={i} label={b.label} steps={b.steps} />)}
+              <div className="row">
+                <button className="ghost" onClick={share}>שתפי עם חברה 🔗</button>
+                <button className="ghost" onClick={() => go('ask', { categoryId: L.course.id, subCategoryId: L.unit.id })}>שאלי את המורה 💬</button>
+                {msg && <small className="muted">{msg}</small>}
+              </div>
+            </article>
+          )}
+          {!quiz ? (
+            <section className="card cta">
+              <div><h2>מוכנה לבחון את עצמך? 🎯</h2><p className="muted">{L.quiz.length} שאלות קצרות, עם הסבר אחרי כל תשובה{L.progress.completed ? ` · הציון הכי טוב שלך: ${L.progress.bestScore}%` : ''}.</p></div>
+              <button onClick={() => { setQuiz(true); window.scrollTo(0, 0); }}>{L.progress.completed ? 'בוחן נוסף' : 'התחילי בוחן'} ▶</button>
+            </section>
+          ) : <QuizRunner lesson={L} go={go} onExit={() => setQuiz(false)} />}
+        </div>
+
+        <aside className="lesson-side">
+          <section className="card side-box">
+            <h4>במבט אחד</h4>
+            <ul className="facts">
+              <li><span>⏱</span> {L.minutes} דקות</li>
+              <li><span>🎯</span> {L.quiz.length} שאלות בבוחן</li>
+              <li><span>⭐</span> <bdi>{L.xp} XP</bdi></li>
+            </ul>
+            {headings.length > 1 && (<><h4>בשיעור הזה</h4><ol className="outline">{headings.map((h, i) => <li key={i}>{h.x}</li>)}</ol></>)}
+          </section>
+          {unit && (
+            <section className="card side-box">
+              <h4>{unit.name} <small className="muted">({idx + 1}/{unit.lessons.length})</small></h4>
+              <div className="unit-list">
+                {unit.lessons.map((l, i) => (
+                  <button key={l.id} className={`lrow ${l.done ? 'done' : ''} ${l.id === id ? 'here' : ''}`} onClick={() => go('lesson', l.id)}>
+                    <span className="num">{l.done ? '✓' : i + 1}</span><span className="lt">{l.title}</span>
+                  </button>
+                ))}
+              </div>
+              {nextLesson && <button className="ghost" onClick={() => go('lesson', nextLesson.id)}>לשיעור הבא: {nextLesson.title} ←</button>}
+            </section>
+          )}
+          <section className="card side-box">
+            <h4>פסנתר חופשי 🎹</h4>
+            <Piano from={60} to={83} namesOnC />
+          </section>
+        </aside>
+      </div>
     </>
   );
 }

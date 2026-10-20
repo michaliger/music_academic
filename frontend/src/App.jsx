@@ -13,6 +13,7 @@ import Friends from './pages/Friends.jsx';
 import Classes from './pages/Classes.jsx';
 import Ask from './pages/Ask.jsx';
 import Admin from './pages/Admin.jsx';
+import MusicToggle from './components/MusicToggle.jsx';
 
 const TABS = [['home', 'בית'], ['map', 'מפת הלימוד'], ['library', 'ספרייה'], ['practice', 'תרגול'], ['studio', 'סטודיו AI'], ['compose', 'חדר הלחנה'], ['friends', 'חברות'], ['classes', 'כיתות'], ['ask', 'שאלי את המורה']];
 
@@ -28,14 +29,14 @@ export default function App() {
   const logout = () => { localStorage.clear(); setUser(null); };
   const tabs = user.role === 'admin' ? [...TABS, ['admin', 'ניהול']] : TABS;
   const active = view.tab === 'lesson' ? 'map' : view.tab;
-  const wide = ['home', 'map', 'library'].includes(view.tab); // these screens use the full page width
+  const wide = ['home', 'map', 'library', 'lesson'].includes(view.tab); // these screens use the full page width
 
   return (
     <>
       <header>
         <div className="brand"><span className="logo sm">♪</span> אקדמיית המוזיקה</div>
         <nav>{tabs.map(([key, label]) => <button key={key} className={`tab ${active === key ? 'on' : ''}`} onClick={() => go(key)}>{label}</button>)}</nav>
-        <div className="who">{user.name} · {ROLE_LABEL[user.role]} <button className="link" onClick={logout}>יציאה</button></div>
+        <div className="who"><MusicToggle compact /> {user.name} · {ROLE_LABEL[user.role]} <button className="link" onClick={logout}>יציאה</button></div>
       </header>
       <main className={wide ? 'wide' : ''}>
         {view.tab === 'home' && <Landing user={user} go={go} />}

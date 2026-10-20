@@ -1,21 +1,23 @@
 import jwt from 'jsonwebtoken';
-import { config } from '../config.js';
-import { User } from '../models.js';
+import { config } from '../config/index.js';
+import { User } from '../models/index.js';
+import { httpError } from '../utils/httpError.js';
 
-export const signToken = (u) => jwt.sign({ id: String(u._id) }, config.jwtSecret, { expiresIn: '7d' });
-const fail = (status, msg) => Object.assign(new Error(msg), { status });
+export const signToken = (user) => jwt.sign({ id: String(user._id) }, config.jwtSecret, { expiresIn: '7d' });
 
-// התפקיד נטען מה-DB בכל בקשה, כך ששינוי תפקיד ע"י מנהלת נכנס לתוקף מיד
+/** Verifies the JWT and loads the CURRENT role from the DB, so role changes apply immediately. */
 export async function requireAuth(req, _res, next) {
   try {
     const { id } = jwt.verify((req.headers.authorization || '').replace('Bearer ', ''), config.jwtSecret);
-    const u = await User.findById(id).select('role');
-    if (!u) throw new Error('no user');
-    req.user = { id: String(u._id), role: u.role };
+    const user = await User.findById(id).select('role');
+    if (!user) throw new Error('unknown user');
+    req.user = { id: String(user._id), role: user.role };
     next();
-  } catch { next(fail(401, 'נדרשת התחברות')); }
+  } catch {
+    next(httpError(401, 'נדרשת התחברות'));
+  }
 }
 
 export const requireRole = (...roles) => (req, _res, next) =>
-  roles.includes(req.user?.role) ? next() : next(fail(403, 'אין הרשאה'));
+  roles.includes(req.user?.role) ? next() : next(httpError(403, 'אין הרשאה'));
 export const requireAdmin = requireRole('admin');

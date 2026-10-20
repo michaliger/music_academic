@@ -1,13 +1,8 @@
-import mongoose from 'mongoose';
 import { ZodError } from 'zod';
 
-export const validate = (schema) => (req, _res, next) => {
-  try { req.body = schema.parse(req.body); next(); } catch (e) { next(e); }
-};
-// לשימוש: router.param('id', idParam)
-export const idParam = (_req, _res, next, v) =>
-  mongoose.isValidObjectId(v) ? next() : next(Object.assign(new Error('מזהה לא תקין'), { status: 400 }));
+export const notFound = (_req, res) => res.status(404).json({ error: 'לא נמצא' });
 
+/** Central error handler: validation -> 400, duplicate key -> 409, otherwise the error's own status. */
 // eslint-disable-next-line no-unused-vars
 export function errorHandler(err, _req, res, _next) {
   if (err instanceof ZodError) {

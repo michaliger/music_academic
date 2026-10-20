@@ -1,8 +1,26 @@
-# אופציונלי: מונגו מקומי לפיתוח (ב-Atlas אין צורך בזה)
+# Full stack:  docker compose up --build   ->  app on http://localhost:8080  (API docs: http://localhost:8080/api/docs)
+# Database only (development with `npm run dev`):  docker compose up -d mongo
 services:
   mongo:
     image: mongo:7
     ports: ["27017:27017"]
     volumes: [mongodata:/data/db]
+
+  api:
+    build: ./backend
+    depends_on: [mongo]
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/music_academy
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ADMIN_PHONE: ${ADMIN_PHONE:-0500000000}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin1234}
+    ports: ["4000:4000"]
+
+  web:
+    build: ./frontend
+    depends_on: [api]
+    ports: ["8080:80"]
+
 volumes:
   mongodata:

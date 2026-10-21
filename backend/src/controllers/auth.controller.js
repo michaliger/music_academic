@@ -7,8 +7,8 @@ import { httpError } from '../utils/httpError.js';
 const session = (user) => ({ token: signToken(user), user: user.toJSON() });
 
 export const register = asyncHandler(async (req, res) => {
-  const { name, phone, password } = req.body;
-  const user = await User.create({ name, phone, passwordHash: await bcrypt.hash(password, 10) });
+  const { name, phone, email, password } = req.body;
+  const user = await User.create({ name, phone, email, passwordHash: await bcrypt.hash(password, 10) });
   res.status(201).json(session(user));
 });
 

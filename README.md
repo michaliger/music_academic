@@ -19,7 +19,7 @@ and an admin dashboard. Built as a production-minded MVP (REST API + MongoDB + R
 ## Tech stack
 - **Backend:** Node.js 18+, Express, MongoDB (Atlas) + Mongoose ODM, JWT, bcrypt, Zod, Helmet, rate limiting, Swagger UI, Jest + Supertest
 - **Frontend:** React 18 + Vite, Web Audio API (no audio files)
-- **AI:** OpenAI Chat Completions behind a single interface (`services/ai.service.js`) with an automatic demo fallback
+- **AI:** Google Gemini (or OpenAI) behind a single interface (`services/ai.service.js`) with an automatic demo fallback
 
 ## Project structure
 ```
@@ -109,7 +109,7 @@ Interactive docs at **`/api/docs`** (Swagger UI). Main groups: `/auth`, `/catego
 | REST API with structured routes; layers: routes / controllers / models / services | ✅ |
 | Database + ORM (MongoDB + Mongoose), relationships and constraints (refs, unique indexes, enums, required) | ✅ |
 | Models: `users`, `categories`, `sub_categories`, `prompts` (user, category, sub-category, prompt, response, created at); a user has many prompts | ✅ (camelCase field names, e.g. `userId` ≙ `user_id`) |
-| AI integration: OpenAI or mock behind a clear interface | ✅ `ai.service.js` (+ demo fallback) |
+| AI integration: Gemini / OpenAI or mock behind a clear interface | ✅ `ai.service.js` (+ demo fallback) |
 | Dashboard: register, select category & sub-category, submit prompt, view response, view history | ✅ |
 | Admin dashboard: all users + their prompt history | ✅ |
 | README: setup, technologies, assumptions, how to run, `.env` example | ✅ |

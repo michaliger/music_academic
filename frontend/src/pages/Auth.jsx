@@ -5,7 +5,7 @@ import { api } from '../api/client.js';
 
 export default function Auth({ onAuth }) {
   const [mode, setMode] = useState('login');
-  const [f, setF] = useState({ name: '', phone: '', password: '' });
+  const [f, setF] = useState({ name: '', phone: '', email: '', password: '' });
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
@@ -26,6 +26,7 @@ export default function Auth({ onAuth }) {
         <p className="muted">לומדות תאוריה מוזיקלית צעד אחר צעד, עם חברות ועם מורה</p>
         <form onSubmit={submit}>
           {mode === 'register' && <input placeholder="שם מלא" value={f.name} onChange={set('name')} required />}
+          {mode === 'register' && <input placeholder="אימייל" type="email" dir="ltr" value={f.email} onChange={set('email')} required />}
           <input placeholder="טלפון (0501234567)" value={f.phone} onChange={set('phone')} inputMode="tel" required />
           <input placeholder="סיסמה" type="password" value={f.password} onChange={set('password')} required />
           {err && <div className="error">{err}</div>}

@@ -5,7 +5,7 @@ const ENDPOINTS = [
   ['get', '/lessons/{id}', 'Lesson content'], ['post', '/lessons/{id}/check', 'Check one quiz answer'],
   ['post', '/lessons/{id}/quiz', 'Submit a quiz (grades, awards XP)'],
   ['post', '/prompts', 'Send a prompt to the AI tutor'], ['get', '/prompts/me', 'My learning history'],
-  ['get', '/friends', 'Friends and leaderboard'], ['post', '/friends', 'Send a friend request by phone'],
+  ['get', '/friends', 'Friends and leaderboard'], ['post', '/friends', 'Send a friend request by e-mail'],
   ['post', '/friends/{id}/accept', 'Accept a request'], ['delete', '/friends/{id}', 'Remove or cancel'],
   ['get', '/classes', 'My classes'], ['post', '/classes', 'Create a class (teacher)'], ['post', '/classes/join', 'Join with a code'],
   ['get', '/classes/{id}/progress', 'Class progress (teacher)'],

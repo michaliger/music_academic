@@ -431,10 +431,10 @@ header.onhome.scrolled { background: linear-gradient(135deg, rgba(38,33,74,.94),
 .histgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 1.2rem; align-items: start; }
 .histgrid .card h3 { font-size: 1.05rem; }
 .histgrid .answer { max-height: 340px; overflow: auto; }
-.card.lesson.big { display: grid; grid-template-columns: minmax(240px, 1fr) 2fr; gap: .6rem 1.6rem; align-items: start; }
-.card.lesson.big .tags { grid-column: 1 / -1; }
-.card.lesson.big h3 { font-size: 1.25rem; }
-@media (max-width: 800px) { .card.lesson.big { grid-template-columns: 1fr; } }
+.card.lesson.wideans { display: grid; grid-template-columns: minmax(240px, 1fr) 2fr; gap: .6rem 1.6rem; align-items: start; }
+.card.lesson.wideans .tags { grid-column: 1 / -1; }
+.card.lesson.wideans h3 { font-size: 1.25rem; }
+@media (max-width: 800px) { .card.lesson.wideans { grid-template-columns: 1fr; } }
 .cgrid.two { display: grid; grid-template-columns: minmax(320px, 400px) 1fr; gap: 1.2rem; align-items: start; }
 .cgrid.two .cside { display: grid; gap: 1.2rem; position: sticky; top: 5.2rem; }
 .cgrid:not(.two) .cside { display: grid; gap: 1.2rem; max-width: 760px; }
@@ -461,3 +461,11 @@ header.onhome.scrolled { background: linear-gradient(135deg, rgba(38,33,74,.94),
 .pianocard .piano { height: clamp(230px, 42vh, 420px); }
 /* new song: details and lyrics side by side across the full width */
 .cgrid:not(.two) .cside { max-width: none; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); align-items: start; }
+
+/* teacher answers (rendered markdown) */
+.answer { white-space: normal; }
+.md > :first-child { margin-top: 0; } .md > :last-child { margin-bottom: 0; }
+.md p { margin: .55rem 0; } .md h4 { margin: 1.1rem 0 .3rem; color: var(--indigo-2); }
+.md .mdh1, .md .mdh2 { font-size: 1.25rem; } .md .mdh3 { font-size: 1.1rem; } .md .mdh4 { font-size: 1rem; }
+.md ul, .md ol { margin: .4rem 0; padding-inline-start: 1.4rem; } .md li { margin: .25rem 0; } .md li.nested { margin-inline-start: 1.2rem; list-style: circle; }
+.md hr { border: 0; border-top: 1px dashed var(--line); margin: 1rem 0; }

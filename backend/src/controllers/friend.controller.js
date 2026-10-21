@@ -24,11 +24,11 @@ export const getFriends = asyncHandler(async (req, res) => {
   });
 });
 
-/** Friend request by phone. If the other side already asked me, both become friends. */
+/** Friend request by e-mail. If the other side already asked me, both become friends. */
 export const sendRequest = asyncHandler(async (req, res) => {
   const me = req.user.id;
-  const target = await User.findOne({ phone: req.body.phone });
-  if (!target) throw httpError(404, 'לא נמצאה משתמשת עם הטלפון הזה. אפשר להזמין אותה להצטרף!');
+  const target = await User.findOne({ email: req.body.email });
+  if (!target) throw httpError(404, 'לא נמצאה משתמשת עם המייל הזה. אפשר להזמין אותה להצטרף!');
   if (String(target._id) === me) throw httpError(400, 'אי אפשר להוסיף את עצמך');
 
   const existing = await Friendship.findOne({ $or: [{ fromId: me, toId: target._id }, { fromId: target._id, toId: me }] });

@@ -11,15 +11,18 @@ export const isAiEnabled = () => aiProvider() !== null;
 
 /** Gemini generateContent call. Tries the configured model first, then a few fallbacks (renamed model, busy model, quota). */
 async function askGemini({ system, user, json, temperature }) {
-  const call = (model) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': config.geminiKey },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: [{ role: 'user', parts: [{ text: user }] }],
-      generationConfig: { temperature, ...(json && { responseMimeType: 'application/json' }) },
-    }),
+  const body = JSON.stringify({
+    systemInstruction: { parts: [{ text: system }] },
+    contents: [{ role: 'user', parts: [{ text: user }] }],
+    generationConfig: { temperature, ...(json && { responseMimeType: 'application/json' }) },
   });
+  const headers = { 'Content-Type': 'application/json', 'x-goog-api-key': config.geminiKey };
+  // Keys that start with "AQ." are Vertex AI express-mode keys; they use a different address than AI Studio ("AIza...") keys.
+  const endpoints = (model) => {
+    const studio = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    const vertex = `https://aiplatform.googleapis.com/v1/publishers/google/models/${model}:generateContent`;
+    return config.geminiKey.startsWith('AQ.') ? [vertex, studio] : [studio];
+  };
   const models = [...new Set([config.geminiModel, 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash', 'gemini-flash-latest'])];
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   let last = '';
@@ -27,14 +30,21 @@ async function askGemini({ system, user, json, temperature }) {
   for (let round = 0; round < 3; round++) {
     let transient = false;
     for (const model of models) {
-      const res = await call(model);
-      if (res.ok) {
-        const data = await res.json();
-        return (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();
+      for (const url of endpoints(model)) {
+        const res = await fetch(url, { method: 'POST', headers, body });
+        if (res.ok) {
+          const data = await res.json();
+          const text = (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();
+          if (text) { console.log(`AI answered (${model}, ${new URL(url).host})`); return text; }
+          last = `Gemini (${model}): empty answer`;
+          continue;
+        }
+        last = `Gemini ${res.status} (${model} @ ${new URL(url).host}): ${(await res.text()).slice(0, 300)}`;
+        console.error(last);
+        if (res.status === 503 || res.status === 429) transient = true;
+        // 418 = blocked by a content filter (e.g. NetFree) on that address: try the next address
+        else if (![404, 400, 403, 418].includes(res.status)) throw new Error(last);
       }
-      last = `Gemini ${res.status} (${model}): ${(await res.text()).slice(0, 300)}`;
-      if (![404, 429, 503].includes(res.status)) throw new Error(last); // a bad key or bad request will not improve with another model
-      if (res.status !== 404) transient = true;
     }
     if (!transient) break;
     await wait(1500 * (round + 1));
@@ -90,7 +100,14 @@ export async function answerPrompt(ctx) {
   if (!isAiEnabled()) return demoAnswer(ctx);
   try {
     const answer = await askModel({
-      system: 'את/ה מורה למוזיקה מקצועי. כתוב/י שיעור ברור בעברית: הסבר, דוגמאות מוזיקליות, ותרגיל קצר בסוף.',
+      system: [
+        'את מורה למוזיקה מקצועית וחמה, שמלמדת תלמידות בעברית ברורה ופשוטה (פנייה בלשון נקבה).',
+        'ענִי רק על השאלה ובקצרה: עד כ-250 מילים. מבנה: הסבר קצר, שתי דוגמאות מוזיקליות, ותרגיל אחד קטן בסוף.',
+        'דיוק הוא קודם כול: כל תו, אינטרוול ואקורד חייבים להיות נכונים. אם את לא בטוחה בעובדה, אל תכתבי אותה. בדקי כל דוגמה לפני שאת כותבת אותה.',
+        'עיצוב: טקסט פשוט עם כותרות קצרות (שורה שמתחילה ב-##), רשימות עם מקף, ו-**הדגשה** במשורה. בלי תגיות HTML, בלי טבלאות ובלי בלוקי קוד.',
+        'אל תכללי את התשובות לתרגיל באותה תשובה; כתבי "נסי לענות בעצמך" ותני רמז אחד בלבד.',
+        'בלי פתיחות ארוכות ובלי דימויים מוזרים. השתמשי בשמות התווים העבריים (דו, רה, מי) וליד כל אחד את האות הלועזית בסוגריים רק כשצריך.',
+      ].join('\n'),
       user: `קטגוריה: ${ctx.category}\nתת-קטגוריה: ${ctx.subCategory}\nבקשה: ${ctx.prompt}`,
     });
     return answer || demoAnswer(ctx);

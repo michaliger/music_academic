@@ -3,7 +3,11 @@ import { registerSchema, compositionSchema, songRequestSchema } from '../src/val
 const validComposition = { title: 'שיר', key: 'C', mode: 'major', tempo: 100, sections: [{ name: 'בית', lines: [{ text: 'שלום', chords: ['C', 'G'] }] }] };
 
 test('register accepts a valid user', () => {
-  expect(registerSchema.safeParse({ name: 'דנה', phone: '0501234567', password: 'secret1' }).success).toBe(true);
+  expect(registerSchema.safeParse({ name: 'דנה', phone: '0501234567', email: 'dana@example.com', password: 'secret1' }).success).toBe(true);
+});
+
+test('register rejects a bad e-mail', () => {
+  expect(registerSchema.safeParse({ name: 'דנה', phone: '0501234567', email: 'nope', password: 'secret1' }).success).toBe(false);
 });
 
 test('register rejects a bad phone and a short password, reporting the fields', () => {

@@ -8,7 +8,8 @@ const objectId = z.string().refine(mongoose.isValidObjectId, 'מזהה לא תק
 const noteName = z.string().regex(/^[A-G][#b]?$/, 'סולם לא תקין');
 
 // auth
-export const registerSchema = z.object({ name: z.string().trim().min(2, 'שם קצר מדי').max(100), phone, password: z.string().min(6, 'סיסמה של 6 תווים לפחות') });
+const email = z.string().trim().toLowerCase().email('כתובת מייל לא תקינה').max(120);
+export const registerSchema = z.object({ name: z.string().trim().min(2, 'שם קצר מדי').max(100), phone, email, password: z.string().min(6, 'סיסמה של 6 תווים לפחות') });
 export const loginSchema = z.object({ phone, password: z.string().min(1) });
 
 // learning
@@ -17,7 +18,7 @@ export const answerCheckSchema = z.object({ index: z.number().int().min(0).max(3
 export const quizSchema = z.object({ answers: z.array(z.number().int().min(0).max(9)).min(1).max(20) });
 
 // social
-export const friendRequestSchema = z.object({ phone });
+export const friendRequestSchema = z.object({ email });
 export const createClassSchema = z.object({ name: z.string().trim().min(2, 'שם קצר מדי').max(80) });
 export const joinClassSchema = z.object({ code: z.string().trim().min(4).max(12) });
 export const roleSchema = z.object({ role: z.enum(ROLES) });

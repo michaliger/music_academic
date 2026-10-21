@@ -443,3 +443,21 @@ header.onhome.scrolled { background: linear-gradient(135deg, rgba(38,33,74,.94),
 @media (max-width: 560px) { .secgrid { grid-template-columns: 1fr; } }
 .hero-panel.fullbleed .hero-top { position: absolute; top: 5.4rem; inset-inline-end: max(1.5rem, 4vw); }
 .features { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+/* v9b fixes */
+.grand { width: 100%; }
+.hero-panel.fullbleed .grand { max-width: 1280px; }
+.notesbg span { color: #7c63cf; }
+@keyframes noteRise { 0% { transform: translate(0, 0) rotate(-10deg); opacity: 0; } 10% { opacity: .5; } 85% { opacity: .4; } 100% { transform: translate(var(--dx), -112vh) rotate(18deg); opacity: 0; } }
+.notesbg span:nth-child(3n) { color: #ff9d86; } .notesbg span:nth-child(3n+1) { color: #4cbf9f; } .notesbg span:nth-child(5n) { color: #e0a93a; }
+/* practice: one screen, big keyboard across the full width */
+.practice { display: grid; gap: 1rem; }
+.practice > .card:first-child { padding: 1rem 1.4rem; display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.4rem; }
+.practice > .card:first-child h2 { margin: 0; }
+.practice > .card:first-child > * { margin-top: 0; margin-bottom: 0; }
+.practice .chips { margin: 0; }
+.pianocard { padding: 1rem 1.4rem 1.4rem; }
+.pianocard h2 { margin-bottom: 0; }
+.pianocard .piano { height: clamp(230px, 42vh, 420px); }
+/* new song: details and lyrics side by side across the full width */
+.cgrid:not(.two) .cside { max-width: none; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); align-items: start; }

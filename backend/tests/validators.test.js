@@ -19,7 +19,7 @@ test('composition accepts a valid payload and rejects an out-of-range tempo', ()
 
 test('composition rejects an invalid key and too many chords on a line', () => {
   expect(compositionSchema.safeParse({ ...validComposition, key: 'H' }).success).toBe(false);
-  const tooMany = { ...validComposition, sections: [{ name: 'בית', lines: [{ text: '', chords: Array(9).fill('C') }] }] };
+  const tooMany = { ...validComposition, sections: [{ name: 'בית', lines: [{ text: '', chords: Array(17).fill('C') }] }] };
   expect(compositionSchema.safeParse(tooMany).success).toBe(false);
 });
 

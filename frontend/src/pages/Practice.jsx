@@ -44,9 +44,9 @@ function EarTrainer() {
 
 export default function Practice() {
   return (
-    <div className="pgrid">
-      <section className="card"><h2>פסנתר חופשי 🎹</h2><p className="muted">לחצי על הקלידים ונסי לחקות את מה שלמדת בשיעורים.</p><Piano from={48} to={83} /></section>
+    <div className="practice">
       <EarTrainer />
+      <section className="card pianocard"><h2>פסנתר חופשי 🎹</h2><Piano from={36} to={95} real namesOnC /></section>
     </div>
   );
 }

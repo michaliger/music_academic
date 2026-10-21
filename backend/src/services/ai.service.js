@@ -20,16 +20,24 @@ async function askGemini({ system, user, json, temperature }) {
       generationConfig: { temperature, ...(json && { responseMimeType: 'application/json' }) },
     }),
   });
-  const models = [...new Set([config.geminiModel, 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'])];
+  const models = [...new Set([config.geminiModel, 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash', 'gemini-flash-latest'])];
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   let last = '';
-  for (const model of models) {
-    const res = await call(model);
-    if (res.ok) {
-      const data = await res.json();
-      return (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();
+  // "high demand" (503) is temporary: go through the models, and if all are busy wait a moment and go through them again
+  for (let round = 0; round < 3; round++) {
+    let transient = false;
+    for (const model of models) {
+      const res = await call(model);
+      if (res.ok) {
+        const data = await res.json();
+        return (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();
+      }
+      last = `Gemini ${res.status} (${model}): ${(await res.text()).slice(0, 300)}`;
+      if (![404, 429, 503].includes(res.status)) throw new Error(last); // a bad key or bad request will not improve with another model
+      if (res.status !== 404) transient = true;
     }
-    last = `Gemini ${res.status} (${model}): ${(await res.text()).slice(0, 300)}`;
-    if (![404, 429, 503].includes(res.status)) break; // a bad key or bad request will not improve with another model
+    if (!transient) break;
+    await wait(1500 * (round + 1));
   }
   throw new Error(last);
 }

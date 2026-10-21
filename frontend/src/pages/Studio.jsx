@@ -1,4 +1,5 @@
-// AI studio: generate a full song (chords, structure, lyrics) from a mood, style and theme.
+// Song studio: generate a full song (chords, structure, lyrics) from a mood, style and theme.
+// The screen shows either the creation form with "my songs", or one opened song (never both at once).
 import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
 import { fmt } from '../utils/format.js';
@@ -7,9 +8,7 @@ import Piano from '../components/Piano.jsx';
 import { playSteps } from '../music/audio.js';
 import { voicingOf } from '../music/theory.js';
 
-
-
-function SongView({ song, go }) {
+function SongView({ song, go, onBack }) {
   const d = song.data;
   const [hl, setHl] = useState([]);
   const playChord = (sym) => { const v = voicingOf(sym); if (!v) return; setHl(v); playSteps([v.map((x) => x + 12)], { dur: 1.5 }); };
@@ -19,21 +18,23 @@ function SongView({ song, go }) {
     playSteps(steps.map((s) => s.map((x) => x + 12)), { gap, dur: gap * 1.1, onStep: (n) => setHl(n.map((x) => x - 12)) });
   };
   return (
-    <section className="card song">
-      <div className="tags"><span>{d.key}</span><span className="alt">{d.tempo} BPM · {d.timeSignature}</span>
-        <time>{d.engine === 'ai' ? '✨ נוצר ע״י AI' : 'מצב הדגמה (אין מפתח OpenAI)'}</time></div>
-      <h2>{d.title}</h2>
-      <Piano from={48} to={83} highlight={hl} />
-      <div className="row"><button className="ghost" onClick={() => go('compose', { song: d })}>🎼 הלחני בעצמך על המילים האלה</button></div>
-      {d.sections.map((sec, i) => (
-        <div key={i} className="sec">
-          <div className="row"><h3>{sec.name}</h3><button className="ghost" onClick={() => playProg(sec.chords)}>▶ נגני את המהלך</button></div>
-          <div className="chips">{sec.chords.map((c, k) => <button key={k} className="chip g" onClick={() => playChord(c)} disabled={!voicingOf(c)}>{c}</button>)}</div>
-          {sec.lyrics.map((l, k) => <p key={k} className="lyric">{l}</p>)}
-        </div>
-      ))}
-      <div className="tip">🎓 {d.explanation}</div>
-    </section>
+    <>
+      <button className="link" onClick={onBack}>← חזרה לסטודיו</button>
+      <section className="card song">
+        <div className="tags"><span>{d.key}</span><span className="alt">{d.tempo} BPM · {d.timeSignature}</span></div>
+        <h2>{d.title}</h2>
+        <Piano from={48} to={83} highlight={hl} />
+        <div className="row"><button className="ghost" onClick={() => go('compose', { song: d })}>🎼 הלחני בעצמך על המילים האלה</button></div>
+        {d.sections.map((sec, i) => (
+          <div key={i} className="sec">
+            <div className="row"><h3>{sec.name}</h3><button className="ghost" onClick={() => playProg(sec.chords)}>▶ נגני את המהלך</button></div>
+            <div className="chips">{sec.chords.map((c, k) => <button key={k} className="chip g" onClick={() => playChord(c)} disabled={!voicingOf(c)}>{c}</button>)}</div>
+            {sec.lyrics.map((l, k) => <p key={k} className="lyric">{l}</p>)}
+          </div>
+        ))}
+        <div className="tip">🎓 {d.explanation}</div>
+      </section>
+    </>
   );
 }
 
@@ -51,16 +52,18 @@ export default function Studio({ go }) {
 
   async function create(e) {
     e.preventDefault(); setErr(''); setBusy(true);
-    try { setSong(await api('/songs/generate', { method: 'POST', body: { mood, genre, theme, ...(key && { key }) } })); loadList(); }
+    try { setSong(await api('/songs/generate', { method: 'POST', body: { mood, genre, theme, ...(key && { key }) } })); loadList(); window.scrollTo(0, 0); }
     catch (x) { setErr(x.message); } finally { setBusy(false); }
   }
   const remove = (id) => api(`/songs/${id}`, { method: 'DELETE' }).then(() => { if (song?.id === id) setSong(null); loadList(); });
 
+  if (song) return <SongView song={song} go={go} onBack={() => setSong(null)} />;
+
   return (
     <>
       <section className="card">
-        <h2>סטודיו ליצירה עם AI 🎤</h2>
-        <p className="muted">ספרי על השיר שאת רוצה, וה-AI יבנה לו מהלך אקורדים, מבנה ומילים. אפשר לשמוע כל אקורד על הפסנתר ולהתחיל לנגן.</p>
+        <h2>סטודיו שירים 🎤</h2>
+        <p className="muted">ספרי על השיר שאת רוצה, ונבנה לו מהלך אקורדים, מבנה ומילים מקוריות. אפשר לשמוע כל אקורד על הפסנתר ולהתחיל לנגן.</p>
         <form onSubmit={create}>
           <b>מצב רוח</b>
           <div className="chips">{MOODS.map(([k, l]) => <button type="button" key={k} className={`chip ${mood === k ? 'on' : ''}`} onClick={() => setMood(k)}>{l}</button>)}</div>
@@ -74,7 +77,6 @@ export default function Studio({ go }) {
           <button disabled={busy || theme.trim().length < 2}>{busy ? 'מלחינה...' : 'צרי שיר 🎶'}</button>
         </form>
       </section>
-      {song && <SongView song={song} go={go} />}
       {list.length > 0 && (
         <section className="card"><h2>השירים שלי</h2>
           {list.map((s) => (

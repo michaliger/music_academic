@@ -154,3 +154,11 @@ All lessons are JSON files in `backend/src/data/curriculum/`; the order is set i
 - Landing: realistic piano (mouse or computer keys `A S D F...`), floating notes, optional quiet background music (generated with Web Audio, starts only after a click, volume slider).
 - Map: whole-course track with a finish flag, remaining lessons/hours, and every course visible at once.
 - Lesson: wide layout with a side panel (facts, outline, lessons in the unit, free piano).
+
+## Composition room
+
+Lyrics come from the AI (original lyrics only) or are pasted by the student. A chord is placed above any word (`{ symbol, at, beats }`), each chord has its own length in beats, the time signature sets the bar length, and the rule-based checker validates the progression against the key. `GET /api/ai/status` tells the UI whether a Gemini/OpenAI key is configured.
+
+## AI diagnostics
+
+Put `GEMINI_API_KEY=your_key` (no quotes, no spaces) in `backend/.env` and restart the API. The start-up line shows `AI: gemini`. Run `npm run ai:check` in `backend`, or open `http://localhost:4000/api/ai/status?test=1` to send one real test question and see the exact reason if it fails. A Gemini key written by mistake in `OPENAI_API_KEY` is detected automatically.

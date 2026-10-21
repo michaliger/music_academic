@@ -9,9 +9,9 @@ import { httpError } from '../utils/httpError.js';
 export const aiProvider = () => (config.geminiKey ? 'gemini' : config.openaiKey ? 'openai' : null);
 export const isAiEnabled = () => aiProvider() !== null;
 
-/** Gemini generateContent call. Returns the text of the first candidate. */
+/** Gemini generateContent call. Tries the configured model first, then a few fallbacks (renamed model, busy model, quota). */
 async function askGemini({ system, user, json, temperature }) {
-  const call = async (model) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+  const call = (model) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': config.geminiKey },
     body: JSON.stringify({
@@ -20,11 +20,18 @@ async function askGemini({ system, user, json, temperature }) {
       generationConfig: { temperature, ...(json && { responseMimeType: 'application/json' }) },
     }),
   });
-  let res = await call(config.geminiModel);
-  if (res.status === 404 && config.geminiModel !== 'gemini-flash-latest') res = await call('gemini-flash-latest'); // model name retired or mistyped
-  if (!res.ok) throw new Error(`Gemini ${res.status}: ${(await res.text()).slice(0, 300)}`);
-  const data = await res.json();
-  return (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();
+  const models = [...new Set([config.geminiModel, 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'])];
+  let last = '';
+  for (const model of models) {
+    const res = await call(model);
+    if (res.ok) {
+      const data = await res.json();
+      return (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();
+    }
+    last = `Gemini ${res.status} (${model}): ${(await res.text()).slice(0, 300)}`;
+    if (![404, 429, 503].includes(res.status)) break; // a bad key or bad request will not improve with another model
+  }
+  throw new Error(last);
 }
 
 /** OpenAI chat-completions call. */
@@ -50,7 +57,9 @@ export async function askModel({ system, user, json = false, temperature = 0.7 }
     return aiProvider() === 'gemini' ? await askGemini(args) : await askOpenAI(args);
   } catch (e) {
     console.error('AI request failed:', e.message);
-    throw httpError(502, 'שירות ה-AI אינו זמין כרגע');
+    const err = httpError(502, 'שירות ה-AI אינו זמין כרגע');
+    err.detail = e.message; // kept for the diagnostics route, never sent with normal responses
+    throw err;
   }
 }
 
@@ -64,8 +73,7 @@ export function demoAnswer({ category, subCategory, summary, prompt }) {
     `1. התחילי מהמושג הבסיסי של "${subCategory}" ונגני אותו על כלי כדי לשמוע אותו.`,
     '2. חפשי את הדפוס: כמעט כל כלל בתאוריה נולד מצליל שנשמע טוב.',
     '3. נסי ליישם: מצאי שיר שאת אוהבת וזהי בו את הנושא.', '',
-    'תרגיל: כתבי מנגינה של 4 תיבות המדגימה את הנושא, ונגני אותה לאט עם מטרונום.', '',
-    '(תשובה זו נוצרה במנוע ההדגמה. הגדירי GEMINI_API_KEY בקובץ .env לקבלת שיעורים מלאים מ-Gemini.)',
+    'תרגיל: כתבי מנגינה של 4 תיבות המדגימה את הנושא, ונגני אותה לאט עם מטרונום.',
   ].join('\n');
 }
 

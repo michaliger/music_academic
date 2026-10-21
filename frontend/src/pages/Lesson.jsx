@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api/client.js';
 import Piano, { PlayBlock } from '../components/Piano.jsx';
 import { playSteps } from '../music/audio.js';
+import ScaleExplorer from '../components/ScaleExplorer.jsx';
 import QuizRunner from './Quiz.jsx';
 
 function Check({ b }) {
@@ -57,7 +58,7 @@ export default function LessonView({ id, go }) {
               <div className="tags"><span>{L.course.name}</span><span className="alt">{L.unit.name}</span><time>{L.minutes} דקות</time></div>
               <h1>{L.title}</h1>
               {L.blocks.map((b, i) => b.t === 'h' ? <h3 key={i}>{b.x}</h3> : b.t === 'p' ? <p key={i}>{b.x}</p>
-                : b.t === 'tip' ? <div key={i} className="tip">💡 {b.x}</div> : b.t === 'check' ? <Check key={i} b={b} /> : <PlayBlock key={i} label={b.label} steps={b.steps} />)}
+                : b.t === 'tip' ? <div key={i} className="tip">💡 {b.x}</div> : b.t === 'check' ? <Check key={i} b={b} /> : b.t === 'scales' ? <ScaleExplorer key={i} initial={b.id} /> : <PlayBlock key={i} label={b.label} steps={b.steps} />)}
               <div className="row">
                 <button className="ghost" onClick={share}>שתפי עם חברה 🔗</button>
                 <button className="ghost" onClick={() => go('ask', { categoryId: L.course.id, subCategoryId: L.unit.id })}>שאלי את המורה 💬</button>

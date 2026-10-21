@@ -45,11 +45,12 @@ function tone(m, t, d) {
 }
 
 /** מנגן סדרת שלבים; כל שלב הוא מערך צלילי MIDI שנשמעים יחד */
-export function playSteps(steps, { gap = 0.6, dur = 1, onStep } = {}) {
+export function playSteps(steps, { gap = 0.6, dur = 1, durs, onStep } = {}) {
   boot();
+  // durs[i] = how long step i rings (a held chord is an empty step after it); empty steps make no sound and no highlight change
   steps.forEach((notes, i) => {
-    notes.forEach((m) => tone(m, ctx.currentTime + i * gap, dur));
-    if (onStep) setTimeout(() => onStep(notes), i * gap * 1000);
+    notes.forEach((m) => tone(m, ctx.currentTime + i * gap, durs?.[i] ?? dur));
+    if (onStep && notes.length) setTimeout(() => onStep(notes), i * gap * 1000);
   });
   if (onStep) setTimeout(() => onStep([]), steps.length * gap * 1000 + dur * 500);
 }

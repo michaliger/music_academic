@@ -11,7 +11,7 @@ const ENDPOINTS = [
   ['get', '/classes/{id}/progress', 'Class progress (teacher)'],
   ['post', '/songs/generate', 'AI song: chords, structure and lyrics'], ['get', '/songs', 'My generated songs'], ['delete', '/songs/{id}', 'Delete a song'],
   ['post', '/compositions/lyrics', 'AI lyrics for a theme'], ['post', '/compositions/analyze', 'Check chords against the key (?ai=1 adds a mentor comment)'],
-  ['get', '/compositions', 'My compositions'], ['post', '/compositions', 'Create a composition'],
+  ['get', '/ai/status', 'Is an AI key configured? (no secrets returned)'], ['get', '/compositions', 'My compositions'], ['post', '/compositions', 'Create a composition'],
   ['get', '/compositions/{id}', 'Get a composition'], ['put', '/compositions/{id}', 'Update a composition'], ['delete', '/compositions/{id}', 'Delete a composition'],
   ['get', '/admin/overview', 'System totals (admin)'], ['get', '/admin/users', 'Users: pagination, search, role filter (admin)'],
   ['patch', '/admin/users/{id}/role', 'Change role (admin)'], ['get', '/admin/users/{id}/prompts', 'A user\'s prompt history (admin)'],

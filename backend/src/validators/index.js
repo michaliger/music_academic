@@ -30,7 +30,13 @@ export const songRequestSchema = z.object({
 
 // composition room
 export const lyricsRequestSchema = z.object({ theme: z.string().trim().min(2, 'כתבי נושא לשיר').max(120), mood: z.enum(Object.keys(MOODS)) });
-const lineSchema = z.object({ text: z.string().max(200).default(''), chords: z.array(z.string().trim().max(12)).max(8) });
+// A chord on a lyric line: its symbol, the word it sits above (`at`, 0-based) and how many beats it lasts.
+// Plain strings (older clients/saved songs) are accepted and converted, so the database always stores objects.
+const chordSchema = z.preprocess(
+  (v) => (typeof v === 'string' ? { symbol: v } : v),
+  z.object({ symbol: z.string().trim().min(1).max(12), at: z.number().int().min(0).max(60).default(0), beats: z.number().int().min(1).max(8).default(4) }),
+);
+const lineSchema = z.object({ text: z.string().max(200).default(''), chords: z.array(chordSchema).max(16) });
 const sectionSchema = z.object({ name: z.string().trim().min(1).max(30), lines: z.array(lineSchema).max(20) });
-export const analyzeSchema = z.object({ key: noteName, mode: z.enum(MODES), sections: z.array(sectionSchema).min(1).max(12) });
+export const analyzeSchema = z.object({ key: noteName, mode: z.enum(MODES), beatsPerBar: z.number().int().min(2).max(6).default(4), sections: z.array(sectionSchema).min(1).max(12) });
 export const compositionSchema = analyzeSchema.extend({ title: z.string().trim().min(1, 'כתבי שם לשיר').max(100), tempo: z.number().int().min(40).max(220) });

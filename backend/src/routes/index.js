@@ -7,6 +7,7 @@ import classes from './classroom.routes.js';
 import admin from './admin.routes.js';
 import songs from './song.routes.js';
 import compositions from './composition.routes.js';
+import ai from './ai.routes.js';
 import catalog from './catalog.routes.js';
 
 /** All API routes, mounted under /api by app.js. */
@@ -18,5 +19,6 @@ router.use('/classes', classes);
 router.use('/admin', admin);
 router.use('/songs', songs);
 router.use('/compositions', compositions);
+router.use('/ai', ai);
 router.use('/', catalog);
 export default router;

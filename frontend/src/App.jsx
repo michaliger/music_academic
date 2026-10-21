@@ -13,9 +13,11 @@ import Friends from './pages/Friends.jsx';
 import Classes from './pages/Classes.jsx';
 import Ask from './pages/Ask.jsx';
 import Admin from './pages/Admin.jsx';
+import Logo from './components/Logo.jsx';
 import MusicToggle from './components/MusicToggle.jsx';
 
-const TABS = [['home', 'בית'], ['map', 'מפת הלימוד'], ['library', 'ספרייה'], ['practice', 'תרגול'], ['studio', 'סטודיו AI'], ['compose', 'חדר הלחנה'], ['friends', 'חברות'], ['classes', 'כיתות'], ['ask', 'שאלי את המורה']];
+// [key, label, icon]
+const TABS = [['home', 'בית', '🏠'], ['map', 'מפת הלימוד', '🗺️'], ['library', 'ספרייה', '🎹'], ['practice', 'תרגול', '🎯'], ['studio', 'סטודיו שירים', '🎤'], ['compose', 'אקורדים לשיר', '🎼'], ['friends', 'חברות', '👭'], ['classes', 'כיתות', '🏫'], ['ask', 'שאלי את המורה', '💬']];
 
 export default function App() {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user') || 'null'));
@@ -27,15 +29,15 @@ export default function App() {
   if (!user) return <Auth onAuth={setUser} />;
 
   const logout = () => { localStorage.clear(); setUser(null); };
-  const tabs = user.role === 'admin' ? [...TABS, ['admin', 'ניהול']] : TABS;
+  const tabs = user.role === 'admin' ? [...TABS, ['admin', 'ניהול', '⚙️']] : TABS;
   const active = view.tab === 'lesson' ? 'map' : view.tab;
   const wide = ['home', 'map', 'library', 'lesson'].includes(view.tab); // these screens use the full page width
 
   return (
     <>
       <header>
-        <div className="brand"><span className="logo sm">♪</span> אקדמיית המוזיקה</div>
-        <nav>{tabs.map(([key, label]) => <button key={key} className={`tab ${active === key ? 'on' : ''}`} onClick={() => go(key)}>{label}</button>)}</nav>
+        <button className="brand" onClick={() => go('home')} aria-label="לדף הבית"><Logo size={38} /><span className="brand-text"><b>מלודיה</b><small>אקדמיית המוזיקה</small></span></button>
+        <nav>{tabs.map(([key, label, icon]) => <button key={key} className={`tab ${active === key ? 'on' : ''}`} onClick={() => go(key)}><span className="ticon" aria-hidden="true">{icon}</span>{label}</button>)}</nav>
         <div className="who"><MusicToggle compact /> {user.name} · {ROLE_LABEL[user.role]} <button className="link" onClick={logout}>יציאה</button></div>
       </header>
       <main className={wide ? 'wide' : ''}>

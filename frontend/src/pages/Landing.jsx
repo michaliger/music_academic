@@ -22,7 +22,7 @@ const STEPS = [
 
 export default function Landing({ user, go }) {
   const [data, setData] = useState(null);
-  useEffect(() => { api('/courses').then(setData).catch(() => setData(null)); }, []);
+  useEffect(() => { api('/courses').then((d) => setData(d?.courses ? d : null)).catch(() => setData(null)); }, []);
   const total = data ? summarize(data.courses) : null;
 
   return (

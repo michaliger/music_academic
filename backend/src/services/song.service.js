@@ -51,6 +51,7 @@ title, key (למשל "C" או "Am"), tempo (מספר שלם), timeSignature (ל�
 בסימוני האקורדים מותר להשתמש רק בסיומות: ללא (מז'ור), m, 7, maj7, m7, dim, aug, sus2, sus4, add9, 6, m7b5, ושמות שורש עם # או b (למשל F#m7, Bbmaj7).`;
 
 const LYRICS_SYSTEM = `את/ה כותב/ת מילים לשירים בעברית. החזר/י אובייקט JSON בלבד: {"title": string, "sections": [{"name": string, "lines": string[]}]}.
+המילים חייבות להיות מקוריות לגמרי: אל תצטט/י ואל תשחזר/י מילים של שירים קיימים, גם אם הנושא מזכיר שיר מוכר.
 שלושה חלקים: בית, פזמון, גשר. 4 שורות בכל חלק. שורות קצרות וקלות לשירה, עם חרוזים עדינים. בלי אקורדים ובלי הסברים.`;
 
 /** Runs a JSON-mode model call and validates the result; null means "fall back to demo". */

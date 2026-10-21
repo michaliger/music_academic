@@ -19,15 +19,22 @@ export default function Ask({ preset }) {
 
   async function submit(e) {
     e.preventDefault(); setErr(''); setBusy(true); setOut(null);
-    try { setOut(await api('/prompts', { method: 'POST', body: { categoryId: catId, subCategoryId: subId, prompt } })); reloadHist(); }
+    try { setOut(await api('/prompts', { method: 'POST', body: { categoryId: catId, subCategoryId: subId, prompt } })); reloadHist(); window.scrollTo(0, 0); }
     catch (x) { setErr(x.message); } finally { setBusy(false); }
   }
   return (
     <>
       <div className="chips"><button className={`tab ${tab === 'new' ? 'on' : ''}`} onClick={() => setTab('new')}>שאלה חדשה</button><button className={`tab ${tab === 'hist' ? 'on' : ''}`} onClick={() => setTab('hist')}>ההיסטוריה שלי</button></div>
-      {tab === 'new' ? (
+      {tab === 'new' ? (out ? (
         <>
-          <section className="card"><h2>מה תרצי להבין?</h2>
+          <button className="link" onClick={() => { setOut(null); setPrompt(''); window.scrollTo(0, 0); }}>← שאלה חדשה</button>
+          <PromptCard p={out} />
+          <div className="row"><button onClick={() => { setOut(null); setPrompt(''); window.scrollTo(0, 0); }}>שאלי שאלה נוספת</button><button className="ghost" onClick={() => setTab('hist')}>ההיסטוריה שלי</button></div>
+        </>
+      ) : (
+        <>
+          <section className="card"><h2>שאלי את המורה 🎓</h2>
+            <p className="muted">בחרי נושא, כתבי שאלה, ותקבלי הסבר של מורה למוזיקה: הסבר, דוגמאות ותרגיל. התשובה נשמרת בהיסטוריה שלך.</p>
             <div className="chips">{cats.map((c) => <button key={c.id} className={`chip ${catId === c.id ? 'on' : ''}`} onClick={() => { setCatId(c.id); setSubId(''); }}>{c.name}</button>)}</div>
             {catId && <div className="chips sub">{subs.map((s) => <button key={s.id} className={`chip ${subId === s.id ? 'on' : ''}`} onClick={() => setSubId(s.id)}>{s.name}</button>)}</div>}
             <form onSubmit={submit}>
@@ -36,9 +43,8 @@ export default function Ask({ preset }) {
               <button disabled={busy || !catId || !subId || prompt.trim().length < 3}>{busy ? 'המורה כותבת...' : 'שליחה 🎶'}</button>
             </form>
           </section>
-          {out && <PromptCard p={out} />}
         </>
-      ) : !hist ? <p className="muted">טוען...</p> : hist.length ? hist.map((p) => <PromptCard key={p.id} p={p} />) : <p className="card muted">עוד לא שאלת כלום.</p>}
+      )) : !hist ? <p className="muted">טוען...</p> : hist.length ? hist.map((p) => <PromptCard key={p.id} p={p} />) : <p className="card muted">עוד לא שאלת כלום.</p>}
     </>
   );
 }

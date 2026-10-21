@@ -1,183 +1,241 @@
-// Composition room: get lyrics (AI or your own), write chords on every line, listen,
-// check them against the key, and save. Chord chips turn green / amber / red after a check.
-import { useEffect, useMemo, useState } from 'react';
+// "Chords for a song": 1) song details, 2) lyrics (written, pasted or generated), 3) chords above the words.
+// Every chord plays when it is placed and is checked against the key right away. Songs are saved and can be
+// reopened as a chord sheet (lyrics with the chords above the words).
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api/client.js';
-import { playSteps } from '../music/audio.js';
-import { NOTE_ASCII, SCALES, diatonic, voicingOf } from '../music/theory.js';
+import { NOTE_ASCII, SCALES, diatonic } from '../music/theory.js';
 import { MOODS } from '../utils/options.js';
 import Piano from '../components/Piano.jsx';
-import ChordPicker from '../components/composer/ChordPicker.jsx';
+import SongSheet from '../components/composer/SongSheet.jsx';
 import AnalysisPanel from '../components/composer/AnalysisPanel.jsx';
+import { EMPTY, chordSheet, fromRaw, fromSong, hasLyrics, normalize, playChord, playSong, toRaw } from '../components/composer/songUtils.js';
 
-const newLine = () => ({ text: '', chords: [] });
-const EMPTY = { title: '', key: 'C', mode: 'major', tempo: 100, sections: [{ name: 'בית', lines: [newLine()] }] };
-
-/** "Am" -> { key: 'A', mode: 'minor' }. Unknown roots fall back to C. */
-function parseKeyName(name = '') {
-  const m = /^([A-G][#b]?)(m?)$/.exec(name);
-  return { key: m && NOTE_ASCII.includes(m[1]) ? m[1] : 'C', mode: m?.[2] ? 'minor' : 'major' };
-}
-
-/** AI studio song -> composition with lyrics only; the AI's chords stay as a hidden hint. */
-const fromSong = (song) => ({
-  ...EMPTY, ...parseKeyName(song.key), title: song.title, tempo: song.tempo || 100,
-  sections: song.sections.filter((s) => s.lyrics.length).map((s) => ({ name: s.name, hint: s.chords.join(' '), lines: s.lyrics.map((text) => ({ text, chords: [] })) })),
-});
-
-const analyzePayload = (c) => ({ key: c.key, mode: c.mode, sections: c.sections.map((s) => ({ name: s.name || 'חלק', lines: s.lines.map((l) => ({ chords: l.chords })) })) });
-const savePayload = (c) => ({ title: c.title || 'שיר ללא שם', key: c.key, mode: c.mode, tempo: c.tempo, sections: c.sections.map((s) => ({ name: s.name || 'חלק', lines: s.lines })) });
-
-/** Plain-text chord sheet: chords above each lyric line. */
-const chordSheet = (c) => `${c.title}\nסולם: ${c.key}${c.mode === 'minor' ? 'm' : ''}\n\n` +
-  c.sections.map((s) => `[${s.name}]\n${s.lines.map((l) => (l.chords.length ? `${l.chords.join('   ')}\n` : '') + l.text).join('\n')}`).join('\n\n');
+const TIME_SIGNATURES = [[4, '4/4'], [3, '3/4'], [2, '2/4'], [6, '6/8']];
+const analyzePayload = (c) => ({ key: c.key, mode: c.mode, beatsPerBar: c.beatsPerBar, sections: c.sections.map((s) => ({ name: s.name || 'חלק', lines: s.lines.map((l) => ({ chords: l.chords })) })) });
+const savePayload = (c) => ({ title: c.title.trim() || 'שיר ללא שם', key: c.key, mode: c.mode, tempo: c.tempo, beatsPerBar: c.beatsPerBar, sections: c.sections.map((s) => ({ name: s.name || 'חלק', lines: s.lines })) });
 
 export default function Composer({ preset }) {
+  const [screen, setScreen] = useState(preset ? 'edit' : 'list'); // list | edit | view
   const [comp, setComp] = useState(() => (preset ? fromSong(preset) : EMPTY));
-  const [analysis, setAnalysis] = useState(null);
-  const [openPicker, setOpenPicker] = useState(null); // "section-line" whose chord picker is open
-  const [hl, setHl] = useState([]);
   const [saved, setSaved] = useState([]);
-  const [lyricsForm, setLyricsForm] = useState({ theme: '', mood: 'happy' });
-  const [showHints, setShowHints] = useState(false);
+  const [analysis, setAnalysis] = useState(null); // live check of every chord
+  const [report, setReport] = useState(null); // the full report (button "בדיקה מלאה")
+  const [last, setLast] = useState(null); // the chord that was placed last: { si, li, ci }
+  const [openPicker, setOpenPicker] = useState(null);
+  const [hl, setHl] = useState([]);
+  const [lyricsMode, setLyricsMode] = useState('own'); // own | ai
+  const [raw, setRaw] = useState('');
+  const [editingLyrics, setEditingLyrics] = useState(false);
+  const [theme, setTheme] = useState({ text: '', mood: 'happy' });
+  const [chordsPerBar, setChordsPerBar] = useState(1);
   const [ui, setUi] = useState({ busy: '', err: '', msg: '' });
+  const [dirty, setDirty] = useState(false);
+  const checkTimer = useRef();
 
   const iv = SCALES.find((s) => s.id === comp.mode).iv;
   const palette = useMemo(() => diatonic(NOTE_ASCII.indexOf(comp.key), iv), [comp.key, iv]);
   const infoAt = useMemo(() => Object.fromEntries((analysis?.chords || []).map((c) => [`${c.section}-${c.line}-${c.index}`, c])), [analysis]);
-  const hasHints = comp.sections.some((s) => s.hint);
+  const lyricsReady = hasLyrics(comp.sections);
+  const defaultBeats = Math.max(1, Math.floor(comp.beatsPerBar / chordsPerBar));
+  const totalChords = comp.sections.reduce((n, s) => n + s.lines.reduce((m, l) => m + l.chords.length, 0), 0);
+  const lastInfo = last && infoAt[`${last.si}-${last.li}-${last.ci}`];
 
   const loadSaved = () => api('/compositions').then(setSaved).catch(() => {});
   useEffect(() => { loadSaved(); }, []);
 
-  /** Runs an async action with busy / error / message handling. */
+  // live check: whenever chords or the key change, ask the server (debounced) which chords fit the key
+  useEffect(() => {
+    if (screen !== 'edit') return undefined;
+    clearTimeout(checkTimer.current);
+    if (!totalChords) { setAnalysis(null); return undefined; }
+    checkTimer.current = setTimeout(() => api('/compositions/analyze', { method: 'POST', body: analyzePayload(comp) }).then(setAnalysis).catch(() => {}), 350);
+    return () => clearTimeout(checkTimer.current);
+  }, [comp.sections, comp.key, comp.mode, screen]); // eslint-disable-line react-hooks/exhaustive-deps
+
   async function run(name, action) {
     setUi({ busy: name, err: '', msg: '' });
     try { setUi({ busy: '', err: '', msg: (await action()) || '' }); }
     catch (e) { setUi({ busy: '', err: e.message, msg: '' }); }
   }
-  /** Edits a clone of the composition. Chord edits make the previous check stale, so it is cleared. */
-  const edit = (change, keepAnalysis = false) => {
-    setComp((c) => change(structuredClone(c)));
-    if (!keepAnalysis) setAnalysis(null);
-  };
+  /** Edits a clone of the composition and marks it as changed (not saved yet). */
+  const edit = (change) => { setComp((c) => change(structuredClone(c))); setDirty(true); setReport(null); };
 
-  const playChord = (symbol) => {
-    const notes = voicingOf(symbol);
-    if (!notes) return;
-    setHl(notes);
-    playSteps([notes.map((n) => n + 12)], { dur: 1.5 });
+  const place = (si, li, at, symbol) => {
+    let ci = 0;
+    edit((c) => {
+      const chords = c.sections[si].lines[li].chords;
+      let pos = chords.length;
+      while (pos > 0 && chords[pos - 1].at > at) pos--;
+      chords.splice(pos, 0, { symbol, at, beats: defaultBeats });
+      ci = pos;
+      return c;
+    });
+    setLast({ si, li, ci });
+    setOpenPicker(null);
+    playChord(symbol, setHl); // you hear it at once
   };
-  const playAll = () => {
-    const steps = comp.sections.flatMap((s) => s.lines.flatMap((l) => l.chords)).map(voicingOf).filter(Boolean);
-    if (!steps.length) return setUi({ busy: '', err: '', msg: 'הוסיפי אקורדים כדי לשמוע את השיר' });
-    const gap = Math.max(0.6, 120 / comp.tempo); // two beats per chord
-    playSteps(steps.map((s) => s.map((n) => n + 12)), { gap, dur: gap * 1.1, onStep: (n) => setHl(n.map((x) => x - 12)) });
-  };
+  const cycleBeats = (si, li, ci) => edit((c) => { const t = c.sections[si].lines[li].chords[ci]; t.beats = t.beats % comp.beatsPerBar + 1; return c; });
+  const removeChord = (si, li, ci) => { setLast(null); edit((c) => { c.sections[si].lines[li].chords.splice(ci, 1); return c; }); };
 
+  const saveLyricsText = () => {
+    const sections = fromRaw(raw, comp.sections);
+    if (!sections.length) return setUi({ busy: '', err: 'כתבי או הדביקי לפחות שורה אחת של מילים', msg: '' });
+    edit((c) => ({ ...c, sections }));
+    setEditingLyrics(false); setRaw('');
+    setUi({ busy: '', err: '', msg: 'המילים נשמרו. עכשיו לחצי על מילה כדי להניח מעליה אקורד.' });
+  };
   const getLyrics = (e) => {
     e.preventDefault();
-    const hasText = comp.sections.some((s) => s.lines.some((l) => l.text.trim()));
-    if (hasText && !confirm('להחליף את המילים הקיימות?')) return;
     run('lyrics', async () => {
-      const data = await api('/compositions/lyrics', { method: 'POST', body: lyricsForm });
+      const data = await api('/compositions/lyrics', { method: 'POST', body: { theme: theme.text, mood: theme.mood } });
       setComp((c) => ({ ...c, title: c.title || data.title, sections: data.sections.map((s) => ({ name: s.name, lines: s.lines.map((text) => ({ text, chords: [] })) })) }));
-      setAnalysis(null);
-      return data.engine === 'ai' ? 'המילים נכתבו ע״י AI. עכשיו תורך להלחין!' : 'מצב הדגמה: מילים לדוגמה. עם מפתח OpenAI תקבלי מילים מקוריות.';
+      setDirty(true);
+      return 'המילים מוכנות. עכשיו לחצי על מילה כדי להניח מעליה אקורד.';
     });
   };
-  const analyze = () => run('analyze', async () => setAnalysis(await api('/compositions/analyze?ai=1', { method: 'POST', body: analyzePayload(comp) })));
+  const fullCheck = () => run('check', async () => { const r = await api('/compositions/analyze?ai=1', { method: 'POST', body: analyzePayload(comp) }); setReport(r); setAnalysis(r); });
   const save = () => run('save', async () => {
     const doc = await api(comp.id ? `/compositions/${comp.id}` : '/compositions', { method: comp.id ? 'PUT' : 'POST', body: savePayload(comp) });
-    setComp((c) => ({ ...c, id: doc.id, title: doc.title }));
-    loadSaved();
-    return 'נשמר ✓';
+    setComp((c) => ({ ...c, id: doc.id, title: doc.title })); setDirty(false); loadSaved();
+    return `השיר "${doc.title}" נשמר ✓`;
   });
-  const openSaved = (id) => run('open', async () => { setComp(await api(`/compositions/${id}`)); setAnalysis(null); });
-  const removeSaved = (id) => api(`/compositions/${id}`, { method: 'DELETE' }).then(() => { if (comp.id === id) setComp(EMPTY); loadSaved(); });
-  const copySheet = () => navigator.clipboard.writeText(chordSheet(comp)).then(() => setUi({ busy: '', err: '', msg: 'גיליון האקורדים הועתק 📋' }));
 
+  const startNew = () => { setComp(EMPTY); setAnalysis(null); setReport(null); setLast(null); setDirty(false); setEditingLyrics(false); setRaw(''); setUi({ busy: '', err: '', msg: '' }); setScreen('edit'); };
+  const openSong = async (id, to) => {
+    try { setComp(normalize(await api(`/compositions/${id}`))); setAnalysis(null); setReport(null); setLast(null); setDirty(false); setEditingLyrics(false); setUi({ busy: '', err: '', msg: '' }); setScreen(to); window.scrollTo(0, 0); }
+    catch (e) { setUi({ busy: '', err: e.message, msg: '' }); }
+  };
+  const removeSong = (id) => confirm('למחוק את השיר?') && api(`/compositions/${id}`, { method: 'DELETE' }).then(loadSaved);
+  const leave = () => { if (dirty && !confirm('יש שינויים שלא נשמרו. לצאת בלי לשמור?')) return; setScreen('list'); loadSaved(); window.scrollTo(0, 0); };
+  const copySheet = () => navigator.clipboard.writeText(chordSheet(comp)).then(() => setUi({ busy: '', err: '', msg: 'גיליון האקורדים הועתק 📋' }));
+  const play = () => { if (!playSong(comp, setHl)) setUi({ busy: '', err: '', msg: 'הוסיפי אקורדים כדי לשמוע את השיר' }); };
+
+  // ---------------------------------------------------------------- list of songs
+  if (screen === 'list') {
+    return (
+      <>
+        <section className="card">
+          <h2>אקורדים לשיר 🎼</h2>
+          <p className="muted">כותבות שיר (או מקבלות מילים מוכנות), מניחות אקורדים מעל המילים, שומעות כל אקורד, ובודקות אם הוא מתאים לסולם. אפשר לשמור, לפתוח ולערוך בכל זמן.</p>
+          <button onClick={startNew}>＋ שיר חדש</button>
+        </section>
+        {saved.length > 0 ? (
+          <section className="card"><h2>השירים שלי</h2>
+            {saved.map((s) => (
+              <div key={s.id} className="line">
+                <span><b>{s.title}</b><br /><small className="muted">סולם {s.key}{s.mode === 'minor' ? ' מינור' : ' מז׳ור'}</small></span>
+                <span><button onClick={() => openSong(s.id, 'view')}>פתיחה</button> <button className="ghost" onClick={() => openSong(s.id, 'edit')}>עריכה</button> <button className="link" onClick={() => removeSong(s.id)}>מחיקה</button></span>
+              </div>
+            ))}
+          </section>
+        ) : <p className="card muted">עוד לא שמרת שירים. לחצי על ״שיר חדש״ כדי להתחיל.</p>}
+      </>
+    );
+  }
+
+  // ---------------------------------------------------------------- finished song (read only)
+  if (screen === 'view') {
+    return (
+      <>
+        <button className="link" onClick={leave}>← חזרה לשירים שלי</button>
+        <section className="card">
+          <div className="tags"><span>סולם {comp.key}{comp.mode === 'minor' ? ' מינור' : ' מז׳ור'}</span><span className="alt">{comp.tempo} BPM</span></div>
+          <h2>{comp.title}</h2>
+          <Piano from={48} to={83} highlight={hl} />
+          <div className="row">
+            <button onClick={play}>▶ נגני את השיר</button>
+            <button className="ghost" onClick={() => setScreen('edit')}>✏️ עריכה</button>
+            <button className="ghost" onClick={copySheet}>📋 העתקת גיליון אקורדים</button>
+          </div>
+          {ui.msg && <p className="okmsg">{ui.msg}</p>}
+        </section>
+        <section className="card sheet"><SongSheet sections={comp.sections} beatsPerBar={comp.beatsPerBar} onPlay={(s) => playChord(s, setHl)} /></section>
+      </>
+    );
+  }
+
+  // ---------------------------------------------------------------- edit
   return (
     <>
-      <section className="card">
-        <h2>חדר הלחנה 🎼</h2>
-        <p className="muted">קבלי מילים מה-AI (או כתבי בעצמך), הניחי אקורדים על כל שורה, האזיני, ובדקי אם ההרמוניה מתאימה לסולם.</p>
+      <button className="link" onClick={leave}>← חזרה לשירים שלי</button>
+
+      <section className="card cstep">
+        <h2><span className="stepno">1</span> פרטי השיר</h2>
         <div className="inline">
-          <input placeholder="שם השיר" value={comp.title} maxLength={100} onChange={(e) => edit((c) => { c.title = e.target.value; return c; }, true)} />
-          <select value={comp.key} onChange={(e) => edit((c) => { c.key = e.target.value; return c; })}>{NOTE_ASCII.map((k) => <option key={k} value={k}>סולם {k}</option>)}</select>
-          <select value={comp.mode} onChange={(e) => edit((c) => { c.mode = e.target.value; return c; })}><option value="major">מז'ור</option><option value="minor">מינור</option></select>
-          <input type="number" min="40" max="220" value={comp.tempo} style={{ maxWidth: 110 }} title="טמפו (BPM)" onChange={(e) => edit((c) => { c.tempo = Math.min(220, Math.max(40, Number(e.target.value) || 100)); return c; }, true)} />
+          <input placeholder="שם השיר" value={comp.title} maxLength={100} onChange={(e) => edit((c) => { c.title = e.target.value; return c; })} />
         </div>
-        <form onSubmit={getLyrics} className="lyrics-form">
-          <b>מילים מה-AI</b>
-          <div className="chips">{MOODS.map(([k, l]) => <button type="button" key={k} className={`chip ${lyricsForm.mood === k ? 'on' : ''}`} onClick={() => setLyricsForm({ ...lyricsForm, mood: k })}>{l}</button>)}</div>
-          <div className="inline">
-            <input placeholder="על מה השיר? (למשל: חברות אמיתית)" value={lyricsForm.theme} maxLength={120} onChange={(e) => setLyricsForm({ ...lyricsForm, theme: e.target.value })} />
-            <button disabled={ui.busy === 'lyrics' || lyricsForm.theme.trim().length < 2}>{ui.busy === 'lyrics' ? 'כותב...' : 'הביאי מילים ✍️'}</button>
+        <div className="inline rhythm">
+          <label>סולם <select value={comp.key} onChange={(e) => edit((c) => { c.key = e.target.value; return c; })}>{NOTE_ASCII.map((k) => <option key={k} value={k}>{k}</option>)}</select></label>
+          <label>סוג <select value={comp.mode} onChange={(e) => edit((c) => { c.mode = e.target.value; return c; })}><option value="major">מז׳ור (שמח)</option><option value="minor">מינור (עצוב)</option></select></label>
+          <label>מהירות <input type="number" min="40" max="220" value={comp.tempo} style={{ width: 90 }} onChange={(e) => edit((c) => { c.tempo = Math.min(220, Math.max(40, Number(e.target.value) || 100)); return c; })} /></label>
+          <label>משקל <select value={comp.beatsPerBar} onChange={(e) => edit((c) => { c.beatsPerBar = Number(e.target.value); return c; })}>{TIME_SIGNATURES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+          <label>אקורדים בתיבה <select value={chordsPerBar} onChange={(e) => setChordsPerBar(Number(e.target.value))}>{[1, 2, 4].filter((n) => n <= comp.beatsPerBar).map((n) => <option key={n} value={n}>{n}</option>)}</select></label>
+        </div>
+        <small className="muted">אקורד חדש יימשך {defaultBeats} פעימות. אפשר לשנות לכל אקורד אחר כך.</small>
+      </section>
+
+      <section className="card cstep">
+        <h2><span className="stepno">2</span> מילים {lyricsReady && <small className="okmsg">נשמרו ✓</small>}</h2>
+        {lyricsReady && !editingLyrics ? (
+          <div className="row">
+            <span className="muted">{comp.sections.reduce((n, s) => n + s.lines.length, 0)} שורות ב-{comp.sections.length} חלקים</span>
+            <button className="ghost" onClick={() => { setRaw(toRaw(comp.sections)); setEditingLyrics(true); }}>✏️ עריכת המילים</button>
           </div>
-        </form>
-        {hasHints && <button className="link" onClick={() => setShowHints(!showHints)}>{showHints ? 'הסתרת' : 'הצצה להצעת'} האקורדים של ה-AI</button>}
-        {ui.err && <div className="error">{ui.err}</div>}
-        {ui.msg && <p className="okmsg">{ui.msg}</p>}
-      </section>
-
-      <section className="card">
-        <Piano from={48} to={83} highlight={hl} />
-        <div className="row">
-          <button onClick={playAll}>▶ נגני את השיר</button>
-          <button onClick={analyze} disabled={ui.busy === 'analyze'}>{ui.busy === 'analyze' ? 'בודקת...' : '✓ בדקי את האקורדים'}</button>
-          <button className="ghost" onClick={save} disabled={ui.busy === 'save'}>💾 שמרי</button>
-          <button className="ghost" onClick={copySheet}>📋 גיליון אקורדים</button>
-        </div>
-      </section>
-
-      <section className="card">
-        {comp.sections.map((sec, si) => (
-          <div className="sec" key={si}>
-            <div className="row">
-              <input className="secname" value={sec.name} maxLength={30} onChange={(e) => edit((c) => { c.sections[si].name = e.target.value; return c; }, true)} />
-              {showHints && sec.hint && <small className="muted" dir="ltr">💡 AI: {sec.hint}</small>}
-              <button className="link" onClick={() => edit((c) => { c.sections.splice(si, 1); return c; })}>מחיקת חלק</button>
+        ) : editingLyrics ? (
+          <>
+            <textarea rows="10" value={raw} onChange={(e) => setRaw(e.target.value)} />
+            <small className="muted">שורה בכל שורה. כותרת של חלק נכתבת בסוגריים מרובעים, למשל [פזמון]. האקורדים נשארים על השורות שלא זזו.</small>
+            <div className="row"><button onClick={saveLyricsText}>שמרי מילים</button><button className="ghost" onClick={() => { setEditingLyrics(false); setRaw(''); }}>ביטול</button></div>
+          </>
+        ) : (
+          <>
+            <div className="chips">
+              <button className={`chip ${lyricsMode === 'own' ? 'on' : ''}`} onClick={() => setLyricsMode('own')}>יש לי מילים</button>
+              <button className={`chip ${lyricsMode === 'ai' ? 'on' : ''}`} onClick={() => setLyricsMode('ai')}>הכינו לי מילים לפי נושא</button>
             </div>
-            {sec.lines.map((line, li) => {
-              const pickerId = `${si}-${li}`;
-              return (
-                <div className="cline" key={li}>
-                  <div className="chords">
-                    {line.chords.map((symbol, ci) => {
-                      const info = infoAt[`${si}-${li}-${ci}`];
-                      return (
-                        <span key={ci} className={`cchip ${info?.status || ''}`} title={info?.note}>
-                          <button type="button" onClick={() => playChord(symbol)}>{symbol}{info?.roman && <small>{info.roman}</small>}</button>
-                          <button type="button" className="x" aria-label="הסרת אקורד" onClick={() => edit((c) => { c.sections[si].lines[li].chords.splice(ci, 1); return c; })}>×</button>
-                        </span>
-                      );
-                    })}
-                    <button type="button" className="chip add" onClick={() => setOpenPicker(openPicker === pickerId ? null : pickerId)}>+ אקורד</button>
-                  </div>
-                  <div className="row">
-                    <input className="lyric-in" placeholder="שורת מילים" value={line.text} maxLength={200} onChange={(e) => edit((c) => { c.sections[si].lines[li].text = e.target.value; return c; }, true)} />
-                    <button className="link" onClick={() => edit((c) => { c.sections[si].lines.splice(li, 1); return c; })}>הסרה</button>
-                  </div>
-                  {openPicker === pickerId && <ChordPicker palette={palette} onPick={(symbol) => edit((c) => { c.sections[si].lines[li].chords.push(symbol); return c; })} />}
+            {lyricsMode === 'own' ? (
+              <>
+                <textarea rows="8" value={raw} onChange={(e) => setRaw(e.target.value)} placeholder={'כתבי או הדביקי כאן את המילים של השיר שלך (או מילים שיש לך רשות להשתמש בהן).\nשורה בכל שורה. שורה ריקה או כותרת כמו [פזמון] פותחת חלק חדש.'} />
+                <button onClick={saveLyricsText} disabled={!raw.trim()}>שמרי מילים</button>
+              </>
+            ) : (
+              <form onSubmit={getLyrics}>
+                <div className="chips">{MOODS.map(([k, l]) => <button type="button" key={k} className={`chip ${theme.mood === k ? 'on' : ''}`} onClick={() => setTheme({ ...theme, mood: k })}>{l}</button>)}</div>
+                <div className="inline">
+                  <input placeholder="על מה השיר? (למשל: חברות אמיתית)" value={theme.text} maxLength={120} onChange={(e) => setTheme({ ...theme, text: e.target.value })} />
+                  <button disabled={ui.busy === 'lyrics' || theme.text.trim().length < 2}>{ui.busy === 'lyrics' ? 'כותבת...' : 'הכיני מילים'}</button>
                 </div>
-              );
-            })}
-            <button className="link" onClick={() => edit((c) => { c.sections[si].lines.push(newLine()); return c; }, true)}>+ שורה</button>
-          </div>
-        ))}
-        <button className="ghost" onClick={() => edit((c) => { c.sections.push({ name: 'חלק חדש', lines: [newLine()] }); return c; }, true)}>+ חלק חדש</button>
+                <small className="muted">המילים מקוריות. למילים של שיר קיים, הדביקי אותן בעצמך תחת ״יש לי מילים״.</small>
+              </form>
+            )}
+          </>
+        )}
       </section>
 
-      {analysis && <AnalysisPanel result={analysis} />}
-
-      {saved.length > 0 && (
-        <section className="card"><h2>השירים שלי</h2>
-          {saved.map((s) => (
-            <div key={s.id} className="line"><span><b>{s.title}</b><br /><small className="muted">{s.key}{s.mode === 'minor' ? 'm' : ''}</small></span>
-              <span><button className="ghost" onClick={() => openSaved(s.id)}>פתיחה</button> <button className="link" onClick={() => removeSaved(s.id)}>מחיקה</button></span></div>
-          ))}
+      {lyricsReady && !editingLyrics && (
+        <section className="card cstep">
+          <h2><span className="stepno">3</span> אקורדים</h2>
+          <p className="muted">לחצי על מילה כדי להניח מעליה אקורד. האקורד מתנגן מיד, ומיד רואים אם הוא מתאים לסולם: <b className="tgreen">ירוק</b> מתאים, <b className="tgold">צהוב</b> צבע מעניין מחוץ לסולם, <b className="tred">אדום</b> לא מתאים.</p>
+          <Piano from={48} to={83} highlight={hl} />
+          {lastInfo && <div className={`livecheck ${lastInfo.status}`}>{lastInfo.status === 'in' ? '✓' : lastInfo.status === 'color' ? '◆' : '✗'} <b>{lastInfo.symbol}</b>{lastInfo.roman && ` (${lastInfo.roman})`}: {lastInfo.note}</div>}
+          <SongSheet sections={comp.sections} editable beatsPerBar={comp.beatsPerBar} palette={palette} infoAt={infoAt} openPicker={openPicker} setOpenPicker={setOpenPicker}
+            onPick={place} onPlay={(s) => playChord(s, setHl)} onBeats={cycleBeats} onRemove={removeChord} />
+          {report && <AnalysisPanel result={report} />}
         </section>
       )}
+
+      {ui.err && <div className="error">{ui.err}</div>}
+      {ui.msg && <p className="okmsg">{ui.msg}</p>}
+
+      <div className="savebar">
+        <button onClick={play} disabled={!totalChords}>▶ נגני</button>
+        <button className="ghost" onClick={fullCheck} disabled={!totalChords || ui.busy === 'check'}>{ui.busy === 'check' ? 'בודקת...' : '✓ בדיקה מלאה'}</button>
+        <button className="ghost" onClick={copySheet} disabled={!lyricsReady}>📋 העתקה</button>
+        <span className="grow" />
+        {dirty && <small className="muted">יש שינויים שלא נשמרו</small>}
+        <button className="savebtn" onClick={save} disabled={ui.busy === 'save' || !lyricsReady}>💾 {comp.id ? 'שמירה' : 'שמירת השיר'}</button>
+        {comp.id && !dirty && <button className="ghost" onClick={() => setScreen('view')}>לצפייה בשיר</button>}
+      </div>
     </>
   );
 }

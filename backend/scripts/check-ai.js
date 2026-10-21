@@ -10,4 +10,4 @@ console.log(`Provider: ${provider}. Sending a test question...`);
 try {
   console.log('Answer:', await askModel({ system: 'ענה במשפט אחד בעברית.', user: 'מהו אקורד מז׳ור?' }));
   console.log('OK: the AI works.');
-} catch (e) { console.log('FAILED. See the "AI request failed" line above for the exact reason.'); process.exit(1); }
+} catch (e) { console.log('FAILED. The exact reason is in the "AI request failed" line above.'); process.exit(1); }

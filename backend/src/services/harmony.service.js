@@ -144,7 +144,8 @@ export function analyzeComposition({ key, mode, sections }) {
   const chords = [];
   const reports = sections.map((section, s) => {
     const own = [];
-    section.lines.forEach((line, l) => line.chords.forEach((symbol, index) => {
+    section.lines.forEach((line, l) => line.chords.forEach((chord, index) => {
+      const symbol = typeof chord === 'string' ? chord : chord.symbol; // chords are { symbol, at, beats } (strings still accepted)
       const info = { ...analyzeChord(symbol, keyPc, mode, palette), section: s, line: l, index };
       chords.push(info); own.push(info);
     }));

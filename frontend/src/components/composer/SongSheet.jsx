@@ -4,7 +4,7 @@ import { wordsOf } from './songUtils.js';
 import ChordPicker from './ChordPicker.jsx';
 
 export default function SongSheet({ sections, editable = false, beatsPerBar = 4, palette, infoAt = {}, openPicker, setOpenPicker, onPick, onPlay, onBeats, onRemove }) {
-  return sections.map((sec, si) => (
+  return <div className="secgrid">{sections.map((sec, si) => (
     <div className="sec" key={si}>
       <h3 className="secname-view">{sec.name}</h3>
       {sec.lines.map((line, li) => {
@@ -47,5 +47,5 @@ export default function SongSheet({ sections, editable = false, beatsPerBar = 4,
         );
       })}
     </div>
-  ));
+  ))}</div>;
 }

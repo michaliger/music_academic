@@ -1,6 +1,6 @@
 # 🎼 Music Academy — AI-Driven Music Theory Learning Platform
 
-A full-stack learning platform: structured music-theory courses with quizzes and progress tracking, an AI tutor, an AI song studio,
+A full-stack learning platform: structured music-theory courses with quizzes and progress tracking, an AI tutor, a song chord room,
 a **composition room** where students write chords over lyrics and get theory feedback, friends and leaderboards, classes with teachers,
 and an admin dashboard. Built as a production-minded MVP (REST API + MongoDB + React).
 
@@ -10,7 +10,7 @@ and an admin dashboard. Built as a production-minded MVP (REST API + MongoDB + R
 | Learning | 9 courses → units → 73 lessons (232 quiz questions, ~12 hours), including a full course on building chords from intervals and tones, interactive piano examples, short quizzes with instant explanations, XP, "continue where I stopped" |
 | Library | Pick a root + chord type (19) or scale/mode (14): the keyboard moves, all inversions, formulas, diatonic chords |
 | AI tutor | Prompts by category / sub-category, stored as learning history (task requirement) |
-| AI song studio | Mood + style + theme → chord progression, structure and lyrics |
+| Chords for a song | Own lyrics or original AI lyrics, chords placed above words, live harmony check |
 | **Composition room** | AI writes lyrics (or you write them) → you place chords on every line → listen → **harmony check** (in key / colourful / outside, roman numerals, cadences, known progressions, score) → save, copy chord sheet |
 | Social | Friends by phone, XP leaderboard, shareable lesson links |
 | Classes | Teachers create classes (join code) and see every student's progress |

@@ -17,7 +17,7 @@ export default function Friends() {
   if (err) return <div className="error">{err}</div>;
   if (!d) return <p className="muted">טוען...</p>;
   return (
-    <>
+    <div className="pgrid">
       <section className="card">
         <h2>הוספת חברה</h2>
         <form onSubmit={add} className="inline"><input placeholder="טלפון של חברה" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" required /><button>שליחה</button></form>
@@ -36,6 +36,6 @@ export default function Friends() {
           </div>))}
         {d.outgoing.map((f) => <div key={f.friendshipId} className="line muted"><span>{f.name} (ממתינה לאישור)</span><button className="link" onClick={() => act(`/friends/${f.friendshipId}`, 'DELETE')}>ביטול</button></div>)}
       </section>
-    </>
+    </div>
   );
 }

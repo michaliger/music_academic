@@ -9,8 +9,7 @@ const FEATURES = [
   { tab: 'map', icon: '🗺️', title: 'מפת לימוד', text: 'עשרות שיעורים קצרים בתשעה קורסים, עם דוגמאות שאפשר לשמוע. האתר זוכר איפה עצרת.' },
   { tab: 'library', icon: '🎹', title: 'ספריית אקורדים וסולמות', text: 'בוחרים אקורד או סולם והמקלדת מראה אותו מיד, כולל כל ההיפוכים.' },
   { tab: 'practice', icon: '👂', title: 'אימון שמיעה', text: 'מזהים אינטרוולים ואקורדים באוזן ומשפרים ניקוד אחרי ניקוד.' },
-  { tab: 'studio', icon: '✨', title: 'סטודיו שירים עם AI', text: 'מצב רוח, סגנון ונושא, וה-AI בונה מהלך אקורדים, מבנה ומילים.' },
-  { tab: 'compose', icon: '🎼', title: 'חדר הלחנה', text: 'כותבות אקורדים על מילים, שומעות, ומקבלות בדיקה אם זה מתאים לסולם.' },
+  { tab: 'compose', icon: '🎼', title: 'אקורדים לשיר', text: 'כותבות או מקבלות מילים מוכנות, מניחות אקורדים מעל המילים, שומעות ובודקות אם זה מתאים.' },
   { tab: 'friends', icon: '👭', title: 'חברות וכיתות', text: 'לוח דירוג בין חברות, וכיתות שבהן המורה רואה את ההתקדמות של כולן.' },
 ];
 
@@ -27,7 +26,7 @@ export default function Landing({ user, go }) {
 
   return (
     <>
-      <section className="hero-panel">
+      <section className="hero-panel fullbleed">
         <div className="hero-top"><MusicToggle /></div>
         <div className="hero-text">
           <small>שלום, {user.name} 👋</small>
@@ -41,6 +40,7 @@ export default function Landing({ user, go }) {
         <HeroPiano />
       </section>
 
+      <div className="homebody">
       {total && (
         <section className="statband">
           <div><b>{total.lessons.length}</b><span>שיעורים</span></div>
@@ -101,6 +101,7 @@ export default function Landing({ user, go }) {
         <h2>מוכנה להתחיל?</h2>
         <button className="cta-gold" onClick={() => go('map')}>לשיעור הראשון ←</button>
       </section>
+      </div>
     </>
   );
 }

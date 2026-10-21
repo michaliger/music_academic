@@ -399,3 +399,47 @@ header .tab:hover:not(:disabled) { background: #fff; color: var(--ink); transfor
 header .tab.on { background: linear-gradient(135deg, #7c63cf, #a46fd0); color: #fff; box-shadow: 0 6px 18px rgba(124,99,207,.45); transform: translateY(-1px); }
 @media (max-width: 1450px) { header .tab .ticon { display: none; } }
 @media (prefers-reduced-motion: reduce) { header .tab { transition: none; } header .tab:hover:not(:disabled) { transform: none; } }
+
+
+/* ================= v9: full-bleed hero, plain nav, floating notes, wide pages ================= */
+main { max-width: 1500px; }
+main, .homebody { position: relative; z-index: 1; }
+.homebody { max-width: 1500px; margin: 1.5rem auto; padding: 0 1rem 3rem; display: grid; gap: 1.2rem; }
+header { z-index: 20; }
+header .tab .ticon { display: none; }
+
+/* the purple stage runs edge to edge, under the navigation */
+.hero-panel.fullbleed { border-radius: 0; min-height: 100vh; margin: 0; padding: 6.2rem max(1.5rem, 4vw) 2.4rem; display: flex; flex-direction: column; justify-content: center; box-shadow: none; }
+header.onhome { position: fixed; top: 0; inset-inline: 0; background: transparent; backdrop-filter: none; border-bottom-color: transparent; box-shadow: none; transition: background .25s, box-shadow .25s; }
+header.onhome .brand, header.onhome .brand-text, header.onhome .brand-text b, header.onhome .brand-text small, header.onhome .who, header.onhome .who .link { color: #fff; }
+header.onhome nav { background: rgba(255,255,255,.12); box-shadow: none; }
+header.onhome .tab { color: #ece7ff; }
+header.onhome .tab:hover:not(:disabled) { background: rgba(255,255,255,.22); color: #fff; box-shadow: none; }
+header.onhome .tab.on { background: rgba(255,255,255,.95); color: #3a2a85; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+header.onhome.scrolled { background: linear-gradient(135deg, rgba(38,33,74,.94), rgba(75,58,153,.94)); backdrop-filter: blur(14px); box-shadow: 0 8px 28px rgba(30,20,80,.35); }
+@media (max-width: 900px) { header.onhome { position: fixed; } }
+
+/* floating notes behind everything */
+.notesbg { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.notesbg span { position: absolute; bottom: -60px; color: var(--lav); opacity: 0; animation: noteRise linear infinite; }
+@keyframes noteRise { 0% { transform: translate(0, 0) rotate(-10deg); opacity: 0; } 12% { opacity: .13; } 85% { opacity: .1; } 100% { transform: translate(var(--dx), -112vh) rotate(18deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .notesbg { display: none; } }
+
+/* wide, multi-column pages (less scrolling) */
+.pgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 1.2rem; align-items: start; }
+@media (max-width: 560px) { .pgrid { grid-template-columns: 1fr; } }
+.histgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 1.2rem; align-items: start; }
+.histgrid .card h3 { font-size: 1.05rem; }
+.histgrid .answer { max-height: 340px; overflow: auto; }
+.card.lesson.big { display: grid; grid-template-columns: minmax(240px, 1fr) 2fr; gap: .6rem 1.6rem; align-items: start; }
+.card.lesson.big .tags { grid-column: 1 / -1; }
+.card.lesson.big h3 { font-size: 1.25rem; }
+@media (max-width: 800px) { .card.lesson.big { grid-template-columns: 1fr; } }
+.cgrid.two { display: grid; grid-template-columns: minmax(320px, 400px) 1fr; gap: 1.2rem; align-items: start; }
+.cgrid.two .cside { display: grid; gap: 1.2rem; position: sticky; top: 5.2rem; }
+.cgrid:not(.two) .cside { display: grid; gap: 1.2rem; max-width: 760px; }
+@media (max-width: 1000px) { .cgrid.two { grid-template-columns: 1fr; } .cgrid.two .cside { position: static; } }
+.secgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 0 1.6rem; align-items: start; }
+@media (max-width: 560px) { .secgrid { grid-template-columns: 1fr; } }
+.hero-panel.fullbleed .hero-top { position: absolute; top: 5.4rem; inset-inline-end: max(1.5rem, 4vw); }
+.features { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }

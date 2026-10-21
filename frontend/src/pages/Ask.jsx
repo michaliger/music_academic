@@ -28,7 +28,7 @@ export default function Ask({ preset }) {
       {tab === 'new' ? (out ? (
         <>
           <button className="link" onClick={() => { setOut(null); setPrompt(''); window.scrollTo(0, 0); }}>← שאלה חדשה</button>
-          <PromptCard p={out} />
+          <PromptCard p={out} big />
           <div className="row"><button onClick={() => { setOut(null); setPrompt(''); window.scrollTo(0, 0); }}>שאלי שאלה נוספת</button><button className="ghost" onClick={() => setTab('hist')}>ההיסטוריה שלי</button></div>
         </>
       ) : (
@@ -44,7 +44,7 @@ export default function Ask({ preset }) {
             </form>
           </section>
         </>
-      )) : !hist ? <p className="muted">טוען...</p> : hist.length ? hist.map((p) => <PromptCard key={p.id} p={p} />) : <p className="card muted">עוד לא שאלת כלום.</p>}
+      )) : !hist ? <p className="muted">טוען...</p> : hist.length ? <div className="histgrid">{hist.map((p) => <PromptCard key={p.id} p={p} />)}</div> : <p className="card muted">עוד לא שאלת כלום.</p>}
     </>
   );
 }

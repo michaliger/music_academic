@@ -159,6 +159,8 @@ export default function Composer({ preset }) {
     <>
       <button className="link" onClick={leave}>← חזרה לשירים שלי</button>
 
+      <div className={`cgrid ${lyricsReady && !editingLyrics ? 'two' : ''}`}>
+      <div className="cside">
       <section className="card cstep">
         <h2><span className="stepno">1</span> פרטי השיר</h2>
         <div className="inline">
@@ -211,9 +213,10 @@ export default function Composer({ preset }) {
           </>
         )}
       </section>
+      </div>
 
       {lyricsReady && !editingLyrics && (
-        <section className="card cstep">
+        <section className="card cstep cmain">
           <h2><span className="stepno">3</span> אקורדים</h2>
           <p className="muted">לחצי על מילה כדי להניח מעליה אקורד. האקורד מתנגן מיד, ומיד רואים אם הוא מתאים לסולם: <b className="tgreen">ירוק</b> מתאים, <b className="tgold">צהוב</b> צבע מעניין מחוץ לסולם, <b className="tred">אדום</b> לא מתאים.</p>
           <Piano from={48} to={83} highlight={hl} />
@@ -223,6 +226,7 @@ export default function Composer({ preset }) {
           {report && <AnalysisPanel result={report} />}
         </section>
       )}
+      </div>
 
       {ui.err && <div className="error">{ui.err}</div>}
       {ui.msg && <p className="okmsg">{ui.msg}</p>}

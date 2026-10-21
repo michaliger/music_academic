@@ -43,7 +43,7 @@ export default function Classes({ user }) {
   const run = (fn) => async (e) => { e.preventDefault(); setE2(''); try { await fn(); reload(); } catch (x) { setE2(x.message); } };
   if (open) return <ClassProgress id={open} onBack={() => { setOpen(null); reload(); }} />;
   return (
-    <>
+    <div className="pgrid">
       {user.role !== 'student' && (
         <section className="card"><h2>יצירת כיתה חדשה</h2>
           <form className="inline" onSubmit={run(async () => { await api('/classes', { method: 'POST', body: { name } }); setName(''); })}><input placeholder="שם הכיתה (למשל: תאוריה א׳)" value={name} onChange={(e) => setName(e.target.value)} required /><button>יצירה</button></form>
@@ -59,6 +59,6 @@ export default function Classes({ user }) {
           <div key={c.id} className="line"><span><b>{c.name}</b><br /><small className="muted">מורה: {c.teacher} · {c.studentCount} תלמידות{c.code && <> · קוד: <b dir="ltr">{c.code}</b></>}</small></span>
             {c.canManage && <button onClick={() => setOpen(c.id)}>התקדמות התלמידות</button>}</div>))}
       </section>
-    </>
+    </div>
   );
 }

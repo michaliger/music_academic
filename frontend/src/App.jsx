@@ -8,6 +8,7 @@ import Lesson from './pages/Lesson.jsx';
 import Library from './pages/Library.jsx';
 import Practice from './pages/Practice.jsx';
 import Composer from './pages/Composer.jsx';
+import Game from './pages/Game.jsx';
 import Friends from './pages/Friends.jsx';
 import Classes from './pages/Classes.jsx';
 import Ask from './pages/Ask.jsx';
@@ -16,7 +17,7 @@ import Logo from './components/Logo.jsx';
 import NotesBg from './components/NotesBg.jsx';
 import { ambient } from './music/audio.js';
 
-const TABS = [['home', 'בית'], ['map', 'מפת הלימוד'], ['library', 'ספרייה'], ['practice', 'תרגול'], ['compose', 'אקורדים לשיר'], ['friends', 'חברות'], ['classes', 'כיתות'], ['ask', 'שאלי את המורה']];
+const TABS = [['home', 'בית'], ['map', 'מפת הלימוד'], ['library', 'ספרייה'], ['practice', 'תרגול'], ['game', 'משחק'], ['compose', 'אקורדים לשיר'], ['friends', 'חברות'], ['classes', 'כיתות'], ['ask', 'שאלי את המורה']];
 
 export default function App() {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user') || 'null'));
@@ -59,6 +60,7 @@ export default function App() {
         {view.tab === 'lesson' && <Lesson id={view.arg} go={go} />}
         {view.tab === 'library' && <Library />}
         {view.tab === 'practice' && <Practice />}
+        {view.tab === 'game' && <Game />}
         {view.tab === 'compose' && <Composer />}
         {view.tab === 'friends' && <Friends />}
         {view.tab === 'classes' && <Classes user={user} />}

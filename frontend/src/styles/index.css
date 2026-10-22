@@ -518,3 +518,17 @@ html { scrollbar-color: #b9a6ea transparent; scrollbar-width: thin; }
 a.btnlink { display: inline-block; padding: .55rem 1rem; border-radius: 12px; background: linear-gradient(135deg, #7c63cf, #a46fd0); color: #fff; text-decoration: none; font-weight: 500; }
 a.btnlink:hover { box-shadow: 0 6px 16px rgba(124,99,207,.38); }
 .mt-note { font-size: 1.1rem; }
+
+/* ================= v11: piano game ================= */
+.game { display: grid; gap: 1rem; max-width: 980px; margin-inline: auto; width: 100%; }
+.gamecanvas { width: 100%; height: min(66vh, 560px); border-radius: 22px; background: #1d1840; box-shadow: 0 18px 44px rgba(40,25,110,.35); touch-action: none; display: block; cursor: pointer; }
+.gamehud { display: flex; align-items: center; gap: 1.4rem; padding: .6rem 1.2rem; border-radius: 16px; background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow); }
+.gamehud b { font-size: 1.3rem; color: var(--indigo-2); } .gamehud .grow { flex: 1; }
+.songgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+.songcard { display: grid; gap: .3rem; text-align: right; padding: 1.1rem 1.2rem; background: #fff; color: var(--ink); border: 2px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); }
+.songcard.on { border-color: var(--lav); background: var(--lav-soft); }
+.songcard b { font-size: 1.1rem; } .bestscore { font-size: .85rem; color: var(--indigo-2); font-weight: 500; }
+button.cta { background: linear-gradient(135deg, #f5c46a, #ffb072); color: #3a2a05; font-weight: 700; padding: .9rem 1.8rem; font-size: 1.05rem; }
+.gameresult { text-align: center; } .gameresult .row { justify-content: center; }
+.stars { font-size: 3rem; letter-spacing: .3rem; color: #d9d2ee; } .stars .on { color: #f5b73a; text-shadow: 0 4px 14px rgba(245,183,58,.5); }
+.big2 { font-size: 1.4rem; font-weight: 700; margin: .3rem 0; }

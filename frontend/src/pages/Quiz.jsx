@@ -1,6 +1,7 @@
 // Quiz runner: one question at a time with instant feedback, then the graded result.
 import { useState } from 'react';
 import { api } from '../api/client.js';
+import Confetti from '../components/Confetti.jsx';
 import { playSteps } from '../music/audio.js';
 
 export default function QuizRunner({ lesson, go, onExit }) {
@@ -32,6 +33,7 @@ export default function QuizRunner({ lesson, go, onExit }) {
     const right = res.results.filter((x) => x.correct).length;
     return (
       <section className={`card result ${res.passed ? 'ok' : ''}`}>
+        {res.passed && <Confetti />}
         <h2>{res.passed ? '🎉 כל הכבוד!' : 'כמעט!'}</h2>
         <p className="big">{right} מתוך {n} ({res.score}%)</p>
         {res.xpGained > 0 && <p>קיבלת {res.xpGained} XP והשיעור הושלם.</p>}

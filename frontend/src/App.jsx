@@ -47,7 +47,11 @@ export default function App() {
       <header className={home ? (scrolled ? 'onhome scrolled' : 'onhome') : ''}>
         <button className="brand" onClick={() => go('home')} aria-label="לדף הבית"><Logo size={38} /><span className="brand-text"><b>מלודיה</b><small>אקדמיית המוזיקה</small></span></button>
         <nav>{tabs.map(([key, label]) => <button key={key} className={`tab ${active === key ? 'on' : ''}`} onClick={() => go(key)}>{label}</button>)}</nav>
-        <div className="who">{user.name} · {ROLE_LABEL[user.role]} <button className="link" onClick={logout}>יציאה</button></div>
+        <div className="who">
+          <span className="avatar" aria-hidden="true">{[...user.name][0]}</span>
+          <span className="whotext"><b>{user.name}</b><small className={`rolepill ${user.role}`}>{ROLE_LABEL[user.role]}</small></span>
+          <button className="logout" onClick={logout} title="יציאה מהחשבון">יציאה</button>
+        </div>
       </header>
       {home && <Landing user={user} go={go} />}
       {!home && <main className="wide">

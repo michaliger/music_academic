@@ -469,3 +469,47 @@ header.onhome.scrolled { background: linear-gradient(135deg, rgba(38,33,74,.94),
 .md .mdh1, .md .mdh2 { font-size: 1.25rem; } .md .mdh3 { font-size: 1.1rem; } .md .mdh4 { font-size: 1rem; }
 .md ul, .md ol { margin: .4rem 0; padding-inline-start: 1.4rem; } .md li { margin: .25rem 0; } .md li.nested { margin-inline-start: 1.2rem; list-style: circle; }
 .md hr { border: 0; border-top: 1px dashed var(--line); margin: 1rem 0; }
+
+
+/* ================= v10: glass navigation with light sweep, user chip, cute touches ================= */
+header { background: rgba(255,255,255,.38); backdrop-filter: blur(20px) saturate(1.5); -webkit-backdrop-filter: blur(20px) saturate(1.5); border-bottom: 1px solid rgba(255,255,255,.55); box-shadow: 0 6px 24px rgba(90,70,160,.10); }
+header nav { background: rgba(255,255,255,.35); border: 1px solid rgba(255,255,255,.7); box-shadow: 0 4px 18px rgba(90,70,160,.12), inset 0 1px 0 rgba(255,255,255,.9); }
+header .tab { position: relative; overflow: hidden; isolation: isolate; }
+header .tab::after { content: ''; position: absolute; top: -20%; bottom: -20%; width: 45%; left: -70%; z-index: -1; background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,.85) 50%, transparent 100%); transform: skewX(-22deg); transition: left .6s ease; }
+header .tab:hover::after { left: 130%; }
+header .tab.on::after { background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,.55) 50%, transparent 100%); animation: tabshine 4.5s ease-in-out infinite; }
+@keyframes tabshine { 0%, 60% { left: -70%; } 100% { left: 130%; } }
+header.onhome nav { background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.22); box-shadow: none; }
+header.onhome .tab::after { background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,.55) 50%, transparent 100%); }
+
+.who { display: flex; align-items: center; gap: .6rem; }
+.avatar { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 1.1rem; color: #fff; background: linear-gradient(135deg, #7c63cf, #ff9d86); box-shadow: 0 4px 12px rgba(124,99,207,.35), 0 0 0 3px rgba(255,255,255,.7); }
+.whotext { display: grid; line-height: 1.15; } .whotext b { font-size: .95rem; }
+.rolepill { justify-self: start; font-size: .7rem; padding: .05rem .55rem; border-radius: 999px; background: var(--lav-soft); color: var(--indigo-2); font-weight: 500; }
+.rolepill.admin { background: linear-gradient(135deg, #f5c46a, #ffb072); color: #3a2a05; } .rolepill.teacher { background: var(--sage-soft); color: #25623f; }
+button.logout { background: rgba(255,255,255,.55); color: var(--indigo-2); border: 1px solid rgba(124,99,207,.25); padding: .35rem .8rem; font-size: .85rem; box-shadow: none; }
+button.logout:hover:not(:disabled) { background: #fff; transform: none; box-shadow: 0 4px 12px rgba(90,70,160,.2); }
+header.onhome .whotext b { color: #fff; } header.onhome .rolepill { background: rgba(255,255,255,.2); color: #fff; } header.onhome .rolepill.admin { color: #3a2a05; background: linear-gradient(135deg, #f5c46a, #ffb072); }
+header.onhome button.logout { background: rgba(255,255,255,.14); color: #fff; border-color: rgba(255,255,255,.4); }
+header.onhome .avatar { box-shadow: 0 4px 12px rgba(0,0,0,.3), 0 0 0 3px rgba(255,255,255,.25); }
+@media (max-width: 1250px) { .whotext small { display: none; } }
+
+/* confetti */
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 60; overflow: hidden; }
+.confetti i { position: absolute; top: -20px; opacity: 0; animation: confettiFall linear forwards; }
+@keyframes confettiFall { 0% { transform: translateY(0) rotate(0); opacity: 1; } 100% { transform: translateY(110vh) rotate(calc(var(--rot) + 540deg)); opacity: .9; } }
+
+/* cute touches */
+::selection { background: #d9ccf7; color: #2f2a4f; }
+html { scrollbar-color: #b9a6ea transparent; scrollbar-width: thin; }
+.sect-title { position: relative; display: flex; align-items: center; justify-content: center; gap: .7rem; }
+.sect-title::before, .sect-title::after { content: '♪'; color: var(--coral); font-size: 1.2rem; opacity: .85; }
+.sect-title::after { content: '♫'; color: var(--sage); }
+.card { transition: transform .22s, box-shadow .22s; }
+.card:hover { box-shadow: 0 14px 38px rgba(90,70,160,.17); }
+.card > h2:first-child { position: relative; padding-bottom: .45rem; }
+.card > h2:first-child::after { content: ''; position: absolute; inset-inline-start: 0; bottom: 0; width: 46px; height: 4px; border-radius: 4px; background: linear-gradient(90deg, var(--lav), var(--coral)); }
+.cstep > h2::after, .pianocard > h2::after { display: none; }
+.feature, .pathcard { transition: transform .22s, box-shadow .22s; }
+.feature:hover, .pathcard:hover { transform: translateY(-4px) rotate(-.4deg); }
+@media (prefers-reduced-motion: reduce) { header .tab::after, header .tab.on::after { animation: none; transition: none; } .confetti { display: none; } }

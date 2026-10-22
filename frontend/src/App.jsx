@@ -45,7 +45,7 @@ export default function App() {
     <>
       <NotesBg />
       <header className={home ? (scrolled ? 'onhome scrolled' : 'onhome') : ''}>
-        <button className="brand" onClick={() => go('home')} aria-label="לדף הבית"><Logo size={38} /><span className="brand-text"><b>טוניקה</b><small>עולם המוזיקה</small></span></button>
+        <button className="brand" onClick={() => go('home')} aria-label="לדף הבית"><Logo size={38} /><span className="brand-text"><b>נעימה</b><small>עולם המוזיקה</small></span></button>
         <nav>{tabs.map(([key, label]) => <button key={key} className={`tab ${active === key ? 'on' : ''}`} onClick={() => go(key)}>{label}</button>)}</nav>
         <div className="who">
           <span className="avatar" aria-hidden="true">{[...user.name][0]}</span>

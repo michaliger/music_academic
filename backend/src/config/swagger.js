@@ -30,7 +30,7 @@ for (const [method, path, summary, secured = true] of ENDPOINTS) {
 
 export const swaggerSpec = {
   openapi: '3.0.0',
-  info: { title: 'Tonica API', version: '2.0.0' },
+  info: { title: 'Neima API', version: '2.0.0' },
   components: { securitySchemes: { bearer: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' } } },
   paths,
 };

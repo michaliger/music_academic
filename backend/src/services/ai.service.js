@@ -9,47 +9,75 @@ import { httpError } from '../utils/httpError.js';
 export const aiProvider = () => (config.geminiKey ? 'gemini' : config.openaiKey ? 'openai' : null);
 export const isAiEnabled = () => aiProvider() !== null;
 
-/** Gemini generateContent call. Tries the configured model first, then a few fallbacks (renamed model, busy model, quota). */
+let keyCursor = 0; // spreads the load: each request starts with the next key
+
+/** One pass over the models for a single key. Returns the text, or throws an Error whose `.transient` / `.keyProblem` flags tell the caller what to do next. */
+async function geminiWithKey(key, body) {
+  const headers = { 'Content-Type': 'application/json', 'x-goog-api-key': key };
+  // Keys that start with "AQ." are Vertex AI express-mode keys; they use a different address than AI Studio ("AIza...") keys.
+  const endpoints = (model) => {
+    const studio = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    const vertex = `https://aiplatform.googleapis.com/v1/publishers/google/models/${model}:generateContent`;
+    return key.startsWith('AQ.') ? [vertex, studio] : [studio];
+  };
+  const models = [...new Set([config.geminiModel, 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash', 'gemini-flash-latest'])];
+  let last = '';
+  let transient = false;
+  let keyProblem = false;
+  for (const model of models) {
+    for (const url of endpoints(model)) {
+      const res = await fetch(url, { method: 'POST', headers, body });
+      if (res.ok) {
+        const data = await res.json();
+        const text = (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();
+        if (text) { console.log(`AI answered (${model}, ${new URL(url).host})`); return text; }
+        last = `Gemini (${model}): empty answer`;
+        continue;
+      }
+      last = `Gemini ${res.status} (${model} @ ${new URL(url).host}): ${(await res.text()).slice(0, 300)}`;
+      console.error(last);
+      if (res.status === 503) transient = true;
+      else if (res.status === 429) { transient = true; keyProblem = true; } // quota used up: another key may still have some
+      else if (res.status === 401 || res.status === 403) keyProblem = true;
+      // 418 = blocked by a content filter (e.g. NetFree) on that address; 400/404 = model or address not usable: try the next one
+      else if (![404, 400, 418].includes(res.status)) throw new Error(last);
+    }
+  }
+  const err = new Error(last);
+  err.transient = transient;
+  err.keyProblem = keyProblem;
+  throw err;
+}
+
+/** Gemini generateContent. Several keys are tried in turn (a key without quota or a rejected key is skipped); busy models are retried after a short wait. */
 async function askGemini({ system, user, json, temperature }) {
   const body = JSON.stringify({
     systemInstruction: { parts: [{ text: system }] },
     contents: [{ role: 'user', parts: [{ text: user }] }],
     generationConfig: { temperature, ...(json && { responseMimeType: 'application/json' }) },
   });
-  const headers = { 'Content-Type': 'application/json', 'x-goog-api-key': config.geminiKey };
-  // Keys that start with "AQ." are Vertex AI express-mode keys; they use a different address than AI Studio ("AIza...") keys.
-  const endpoints = (model) => {
-    const studio = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-    const vertex = `https://aiplatform.googleapis.com/v1/publishers/google/models/${model}:generateContent`;
-    return config.geminiKey.startsWith('AQ.') ? [vertex, studio] : [studio];
-  };
-  const models = [...new Set([config.geminiModel, 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash', 'gemini-flash-latest'])];
+  const keys = config.geminiKeys;
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-  let last = '';
-  // "high demand" (503) is temporary: go through the models, and if all are busy wait a moment and go through them again
-  for (let round = 0; round < 3; round++) {
+  let last = new Error('no Gemini key');
+  for (let pass = 0; pass < 3; pass++) {
     let transient = false;
-    for (const model of models) {
-      for (const url of endpoints(model)) {
-        const res = await fetch(url, { method: 'POST', headers, body });
-        if (res.ok) {
-          const data = await res.json();
-          const text = (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();
-          if (text) { console.log(`AI answered (${model}, ${new URL(url).host})`); return text; }
-          last = `Gemini (${model}): empty answer`;
-          continue;
-        }
-        last = `Gemini ${res.status} (${model} @ ${new URL(url).host}): ${(await res.text()).slice(0, 300)}`;
-        console.error(last);
-        if (res.status === 503 || res.status === 429) transient = true;
-        // 418 = blocked by a content filter (e.g. NetFree) on that address: try the next address
-        else if (![404, 400, 403, 418].includes(res.status)) throw new Error(last);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[(keyCursor + i) % keys.length];
+      try {
+        const text = await geminiWithKey(key, body);
+        if (keys.length > 1) keyCursor = (keyCursor + 1) % keys.length;
+        return text;
+      } catch (e) {
+        last = e;
+        if (e.transient) transient = true;
+        if (e.keyProblem === undefined && !e.transient) throw e; // a real request error: another key will not help
+        if (keys.length > 1) console.error(`Gemini key #${((keyCursor + i) % keys.length) + 1} did not work, trying the next one`);
       }
     }
     if (!transient) break;
-    await wait(1500 * (round + 1));
+    await wait(1500 * (pass + 1));
   }
-  throw new Error(last);
+  throw last;
 }
 
 /** OpenAI chat-completions call. */

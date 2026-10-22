@@ -16,10 +16,17 @@ export const config = {
   mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/music_academy',
   jwtSecret: process.env.JWT_SECRET || 'dev-secret',
   // Keys are trimmed and stripped of quotes: a stray space or quote in .env is the most common reason a key "is not picked up".
-  geminiKey: clean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) || (openaiRaw && !looksOpenAI(openaiRaw) ? openaiRaw : ''),
+  // One or several Gemini keys: GEMINI_API_KEYS="key1,key2,key3" (comma, space or new line) and/or GEMINI_API_KEY. When one key runs out of quota the next one is used.
+  geminiKeys: [...new Set([
+    ...String(process.env.GEMINI_API_KEYS || '').split(/[\s,;]+/).map(clean),
+    clean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
+    openaiRaw && !looksOpenAI(openaiRaw) ? openaiRaw : '',
+  ].filter(Boolean))],
   geminiModel: clean(process.env.GEMINI_MODEL) || 'gemini-2.5-flash',
   openaiKey: looksOpenAI(openaiRaw) ? openaiRaw : '',
   openaiModel: clean(process.env.OPENAI_MODEL) || 'gpt-4o-mini',
   adminPhone: process.env.ADMIN_PHONE || '0500000000',
   adminPassword: process.env.ADMIN_PASSWORD || 'admin1234',
 };
+
+Object.defineProperty(config, 'geminiKey', { get: () => config.geminiKeys[0] || '', enumerable: true });

@@ -36,7 +36,7 @@ export default function LessonView({ id, go }) {
   async function share() {
     const url = `${location.origin}/?lesson=${id}`;
     try {
-      if (navigator.share) await navigator.share({ title: L.title, text: `למדתי "${L.title}" בטוניקה, עולם המוזיקה. בואי ללמוד איתי!`, url });
+      if (navigator.share) await navigator.share({ title: L.title, text: `למדתי "${L.title}" בנעימה, עולם המוזיקה. בואי ללמוד איתי!`, url });
       else { await navigator.clipboard.writeText(url); setMsg('הקישור הועתק '); }
     } catch { /* בוטל */ }
   }

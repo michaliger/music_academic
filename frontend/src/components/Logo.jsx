@@ -1,7 +1,7 @@
 // Brand mark: a gradient tile with a pair of beamed eighth notes (same drawing as public/favicon.svg).
 export default function Logo({ size = 40 }) {
   return (
-    <svg className="logo-mark" width={size} height={size} viewBox="0 0 64 64" role="img" aria-label="טוניקה">
+    <svg className="logo-mark" width={size} height={size} viewBox="0 0 64 64" role="img" aria-label="נעימה">
       <defs><linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#7c63cf" /><stop offset="1" stopColor="#ff9d86" /></linearGradient></defs>
       <rect width="64" height="64" rx="18" fill="url(#logoGrad)" />
       <path d="M26 17V43M44 13V39" stroke="#fff" strokeWidth="3.4" strokeLinecap="round" />

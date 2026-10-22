@@ -197,14 +197,14 @@ export default function Composer({ preset }) {
             </div>
             {lyricsMode === 'own' ? (
               <>
-                <textarea rows="8" value={raw} onChange={(e) => setRaw(e.target.value)} placeholder={'כתבי או הדביקי כאן את המילים של השיר שלך (או מילים שיש לך רשות להשתמש בהן).\nשורה בכל שורה. שורה ריקה או כותרת כמו [פזמון] פותחת חלק חדש.'} />
+                <textarea rows="8" value={raw} onChange={(e) => setRaw(e.target.value)} placeholder={'הדביקי כאן את המילים של השיר שאת רוצה לעבוד עליו (העתקה מאתר שירים לוקחת כמה שניות), או כתבי מילים משלך.\nשורה בכל שורה. שורה ריקה או כותרת כמו [פזמון] פותחת חלק חדש.'} />
                 <button onClick={saveLyricsText} disabled={!raw.trim()}>שמרי מילים</button>
               </>
             ) : (
               <form onSubmit={getLyrics}>
                 <div className="chips">{MOODS.map(([k, l]) => <button type="button" key={k} className={`chip ${theme.mood === k ? 'on' : ''}`} onClick={() => setTheme({ ...theme, mood: k })}>{l}</button>)}</div>
                 <div className="inline">
-                  <input placeholder="על מה השיר? (למשל: חברות אמיתית)" value={theme.text} maxLength={120} onChange={(e) => setTheme({ ...theme, text: e.target.value })} />
+                  <input placeholder="על מה השיר? (למשל: חברות אמיתית, געגוע לקיץ)" value={theme.text} maxLength={120} onChange={(e) => setTheme({ ...theme, text: e.target.value })} />
                   <button disabled={ui.busy === 'lyrics' || theme.text.trim().length < 2}>{ui.busy === 'lyrics' ? 'כותבת...' : 'הכיני מילים'}</button>
                 </div>
                 <small className="muted">המילים מקוריות. למילים של שיר קיים, הדביקי אותן בעצמך תחת ״יש לי מילים״.</small>

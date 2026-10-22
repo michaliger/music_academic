@@ -1,6 +1,6 @@
-# Tonica (טוניקה) — AI-Driven Music Theory Learning Platform
+# Neima (נעימה) — AI-Driven Music Theory Learning Platform
 
-Tonica ("טוניקה" — the home note of a key; the subtitle is "עולם המוזיקה", the world of music) is a full-stack learning platform for music theory (Hebrew, right-to-left UI).
+Neima ("נעימה" — a pleasant melody; the subtitle is "עולם המוזיקה", the world of music) is a full-stack learning platform for music theory (Hebrew, right-to-left UI).
 Students follow a structured curriculum with interactive piano examples and graded quizzes, ask an **AI music teacher** questions by category and sub-category,
 write chords over song lyrics with an automatic **harmony check**, compete with friends, and join classes run by teachers.
 An admin dashboard shows every user and their prompt history.
@@ -130,6 +130,7 @@ Copy `backend/.env.example` to `backend/.env`. **Never commit `.env`** (it is in
 | `MONGODB_URI` | Atlas or local MongoDB connection string |
 | `JWT_SECRET` | Signing key for JWTs (use a long random value) |
 | `GEMINI_API_KEY` | Optional. Google Gemini key (preferred provider) |
+| `GEMINI_API_KEYS` | Optional. Several Gemini keys, comma separated. A key that is out of quota (429) or rejected (401/403) is skipped and the next one is used; requests are spread across the keys |
 | `GEMINI_MODEL` | Default `gemini-2.5-flash` (other models are tried automatically if it is busy) |
 | `OPENAI_API_KEY` | Optional alternative provider (keys starting with `sk-`) |
 | `OPENAI_MODEL` | Default `gpt-4o-mini` |
@@ -139,6 +140,7 @@ Copy `backend/.env.example` to `backend/.env`. **Never commit `.env`** (it is in
 All AI features go through one function, `askModel()` in `backend/src/services/ai.service.js`:
 - **Providers:** Gemini (REST `generateContent`) or OpenAI chat completions, chosen by which key exists. A key that does not start with `sk-` is treated as a Gemini key.
 - **Resilience:** if a Gemini model is busy (HTTP 503/429) or unavailable (404), the service tries other models and retries a few times with a short wait. An address blocked by a content filter (e.g. NetFree, HTTP 418) is skipped.
+- **Several keys:** `GEMINI_API_KEYS=key1,key2,key3` (keys from separate Google projects). Requests rotate across the keys and a failing key is skipped; `/api/ai/status` reports how many keys are configured.
 - **Fallback:** if no key exists or the AI is down, the app answers with a deterministic demo engine, so every screen still works.
 - **Teacher prompt:** the system prompt asks for a short, accurate, structured lesson in simple text; answers are rendered with a small safe Markdown renderer (no HTML is injected).
 - **Lyrics:** the AI writes *original* lyrics only. Lyrics of existing songs are never fetched (copyright); students paste their own.

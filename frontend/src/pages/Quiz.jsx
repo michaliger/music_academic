@@ -34,7 +34,7 @@ export default function QuizRunner({ lesson, go, onExit }) {
     return (
       <section className={`card result ${res.passed ? 'ok' : ''}`}>
         {res.passed && <Confetti />}
-        <h2>{res.passed ? '🎉 כל הכבוד!' : 'כמעט!'}</h2>
+        <h2>{res.passed ? ' כל הכבוד!' : 'כמעט!'}</h2>
         <p className="big">{right} מתוך {n} ({res.score}%)</p>
         {res.xpGained > 0 && <p>קיבלת {res.xpGained} XP והשיעור הושלם.</p>}
         {!res.passed && <p>צריך 60% כדי להשלים. קראי שוב ונסי עוד פעם, זה חלק מהלמידה.</p>}
@@ -51,14 +51,14 @@ export default function QuizRunner({ lesson, go, onExit }) {
       <div className="dots">{Array.from({ length: n }, (_, k) => <i key={k} className={k < i ? 'd done' : k === i ? 'd cur' : 'd'} />)}</div>
       <small className="muted">שאלה {i + 1} מתוך {n}</small>
       <h2>{q.q}</h2>
-      {q.p && <button className="play" onClick={() => playSteps(q.p, { gap: 0.8, dur: 1.2 })}>🔊 האזיני</button>}
+      {q.p && <button className="play" onClick={() => playSteps(q.p, { gap: 0.8, dur: 1.2 })}> האזיני</button>}
       <div className="opts">
         {q.o.map((o, oi) => {
           const cls = fb ? (oi === fb.answer ? 'right' : oi === fb.chosen ? 'wrong' : '') : '';
           return <button key={oi} disabled={!!fb} className={`opt ${cls}`} onClick={() => choose(oi)}>{o}</button>;
         })}
       </div>
-      {fb && <div className={`tip ${fb.correct ? 'good' : ''}`}><b>{fb.correct ? '✓ נכון! ' : '✗ לא בדיוק. '}</b>{fb.explain}</div>}
+      {fb && <div className={`tip ${fb.correct ? 'good' : ''}`}><b>{fb.correct ? '✓ נכון! ' : '✗ לא בדיוק.'}</b>{fb.explain}</div>}
       {err && <div className="error">{err}</div>}
       {fb && <button onClick={next}>{i + 1 < n ? 'השאלה הבאה ▶' : 'לסיום ולציון'}</button>}
     </section>

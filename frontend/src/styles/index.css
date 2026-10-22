@@ -513,3 +513,8 @@ html { scrollbar-color: #b9a6ea transparent; scrollbar-width: thin; }
 .feature, .pathcard { transition: transform .22s, box-shadow .22s; }
 .feature:hover, .pathcard:hover { transform: translateY(-4px) rotate(-.4deg); }
 @media (prefers-reduced-motion: reduce) { header .tab::after, header .tab.on::after { animation: none; transition: none; } .confetti { display: none; } }
+.invite { margin-top: .6rem; padding: .8rem 1rem; border-radius: 14px; background: var(--lav-soft); }
+.invite p { margin: 0 0 .5rem; }
+a.btnlink { display: inline-block; padding: .55rem 1rem; border-radius: 12px; background: linear-gradient(135deg, #7c63cf, #a46fd0); color: #fff; text-decoration: none; font-weight: 500; }
+a.btnlink:hover { box-shadow: 0 6px 16px rgba(124,99,207,.38); }
+.mt-note { font-size: 1.1rem; }

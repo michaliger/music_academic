@@ -6,11 +6,11 @@ import MusicToggle from '../components/MusicToggle.jsx';
 import { infoOf, summarize } from '../utils/courses.js';
 
 const FEATURES = [
-  { tab: 'map', icon: '🗺️', title: 'מפת לימוד', text: 'עשרות שיעורים קצרים בתשעה קורסים, עם דוגמאות שאפשר לשמוע. האתר זוכר איפה עצרת.' },
-  { tab: 'library', icon: '🎹', title: 'ספריית אקורדים וסולמות', text: 'בוחרים אקורד או סולם והמקלדת מראה אותו מיד, כולל כל ההיפוכים.' },
-  { tab: 'practice', icon: '👂', title: 'אימון שמיעה', text: 'מזהים אינטרוולים ואקורדים באוזן ומשפרים ניקוד אחרי ניקוד.' },
-  { tab: 'compose', icon: '🎼', title: 'אקורדים לשיר', text: 'כותבות או מקבלות מילים מוכנות, מניחות אקורדים מעל המילים, שומעות ובודקות אם זה מתאים.' },
-  { tab: 'friends', icon: '👭', title: 'חברות וכיתות', text: 'לוח דירוג בין חברות, וכיתות שבהן המורה רואה את ההתקדמות של כולן.' },
+  { tab: 'map', icon: '𝄞', title: 'מפת לימוד', text: 'עשרות שיעורים קצרים בתשעה קורסים, עם דוגמאות שאפשר לשמוע. האתר זוכר איפה עצרת.' },
+  { tab: 'library', icon: '♯', title: 'ספריית אקורדים וסולמות', text: 'בוחרים אקורד או סולם והמקלדת מראה אותו מיד, כולל כל ההיפוכים.' },
+  { tab: 'practice', icon: '♫', title: 'אימון שמיעה', text: 'מזהים אינטרוולים ואקורדים באוזן ומשפרים ניקוד אחרי ניקוד.' },
+  { tab: 'compose', icon: '♪', title: 'אקורדים לשיר', text: 'כותבות או מקבלות מילים מוכנות, מניחות אקורדים מעל המילים, שומעות ובודקות אם זה מתאים.' },
+  { tab: 'friends', icon: '♬', title: 'חברות וכיתות', text: 'לוח דירוג בין חברות, וכיתות שבהן המורה רואה את ההתקדמות של כולן.' },
 ];
 
 const STEPS = [
@@ -29,7 +29,7 @@ export default function Landing({ user, go }) {
       <section className="hero-panel fullbleed">
         <div className="hero-top"><MusicToggle /></div>
         <div className="hero-text">
-          <small>שלום, {user.name} 👋</small>
+          <small>שלום, {user.name}</small>
           <h1>מוזיקה שלומדים באוזן, בעיניים ובלב</h1>
           <p>תאוריה מוזיקלית מהצליל הראשון ועד שיר משלך: שומעים, מנגנים, נבחנים ומלחינים. הכול במקום אחד, בקצב שלך.</p>
           <div className="row">
@@ -70,7 +70,7 @@ export default function Landing({ user, go }) {
                 </li>
               );
             })}
-            <li className="pathend"><span>🏁</span><b>שיר משלך</b><small>סוף המסלול</small></li>
+            <li className="pathend"><span>♬</span><b>שיר משלך</b><small>סוף המסלול</small></li>
           </ol>
         </section>
       )}

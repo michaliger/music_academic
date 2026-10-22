@@ -33,14 +33,14 @@ export default function Ask({ preset }) {
         </>
       ) : (
         <>
-          <section className="card"><h2>שאלי את המורה 🎓</h2>
+          <section className="card"><h2>שאלי את המורה </h2>
             <p className="muted">בחרי נושא, כתבי שאלה, ותקבלי הסבר של מורה למוזיקה: הסבר, דוגמאות ותרגיל. התשובה נשמרת בהיסטוריה שלך.</p>
             <div className="chips">{cats.map((c) => <button key={c.id} className={`chip ${catId === c.id ? 'on' : ''}`} onClick={() => { setCatId(c.id); setSubId(''); }}>{c.name}</button>)}</div>
             {catId && <div className="chips sub">{subs.map((s) => <button key={s.id} className={`chip ${subId === s.id ? 'on' : ''}`} onClick={() => setSubId(s.id)}>{s.name}</button>)}</div>}
             <form onSubmit={submit}>
               <textarea rows="3" maxLength="1000" placeholder="לדוגמה: למה אקורד מינור נשמע עצוב?" value={prompt} onChange={(e) => setPrompt(e.target.value)} />
               {err && <div className="error">{err}</div>}
-              <button disabled={busy || !catId || !subId || prompt.trim().length < 3}>{busy ? 'המורה כותבת...' : 'שליחה 🎶'}</button>
+              <button disabled={busy || !catId || !subId || prompt.trim().length < 3}>{busy ? 'המורה כותבת...' : 'שליחה'}</button>
             </form>
           </section>
         </>

@@ -31,7 +31,7 @@ export default function LearningMap({ user, go }) {
             <div><small className="muted">{last && !last.done ? 'המשיכי מהמקום שעצרת' : 'השיעור הבא שלך'}</small><b>{next.title}</b></div>
             <button onClick={() => go('lesson', next.id)}>המשך ▶</button>
           </div>
-        ) : <div className="mb-next">🎉 סיימת את כל השיעורים! אפשר להתאמן באימון השמיעה או להלחין.</div>}
+        ) : <div className="mb-next"> סיימת את כל השיעורים! אפשר להתאמן באימון השמיעה או להלחין.</div>}
       </section>
 
       <section className="card track" aria-label="מסלול הלימוד כולו">
@@ -51,7 +51,7 @@ export default function LearningMap({ user, go }) {
               </a>
             );
           })}
-          <span className="flag" title="סוף המסלול">🏁</span>
+          <span className="flag" title="סוף המסלול">♬</span>
         </div>
       </section>
 

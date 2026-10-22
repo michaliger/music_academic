@@ -21,8 +21,8 @@ export default function Auth({ onAuth }) {
   return (
     <div className="hero">
       <div className="card auth">
-        <div className="auth-logo"><Logo size={72} /><h1 className="auth-name">מלודיה</h1></div>
-        <h2 className="auth-sub">אקדמיית המוזיקה</h2>
+        <div className="auth-logo"><Logo size={72} /><h1 className="auth-name">טוניקה</h1></div>
+        <h2 className="auth-sub">עולם המוזיקה</h2>
         <p className="muted">לומדות תאוריה מוזיקלית צעד אחר צעד, עם חברות ועם מורה</p>
         <form onSubmit={submit}>
           {mode === 'register' && <input placeholder="שם מלא" value={f.name} onChange={set('name')} required />}

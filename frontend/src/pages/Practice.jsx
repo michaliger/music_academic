@@ -27,13 +27,13 @@ function EarTrainer() {
   const name = options.find((o) => o.v === q?.a)?.n;
   return (
     <section className="card">
-      <h2>אימון שמיעה 👂</h2>
+      <h2>אימון שמיעה </h2>
       <div className="chips">
         {[['intervals', 'זיהוי אינטרוולים'], ['chords', 'מז\'ור או מינור?']].map(([k, l]) => <button key={k} className={`chip ${mode === k ? 'on' : ''}`} onClick={() => { setMode(k); setQ(null); setFb(null); }}>{l}</button>)}
       </div>
       <div className="row">
         <button onClick={next}>{q ? 'שאלה הבאה' : 'התחילי'}</button>
-        {q && <button className="ghost" onClick={() => playSteps(q.steps, { gap: 0.8, dur: 1.2 })}>🔁 שמעי שוב</button>}
+        {q && <button className="ghost" onClick={() => playSteps(q.steps, { gap: 0.8, dur: 1.2 })}> שמעי שוב</button>}
         <small className="muted">ניקוד: {score.ok}/{score.n}</small>
       </div>
       {q && <div className="chips">{options.map((o) => <button key={o.v} disabled={!!fb} className={`opt ${fb && o.v === q.a ? 'right' : ''}`} onClick={() => pick(o.v)}>{o.n}</button>)}</div>}
@@ -46,7 +46,7 @@ export default function Practice() {
   return (
     <div className="practice">
       <EarTrainer />
-      <section className="card pianocard"><h2>פסנתר חופשי 🎹</h2><Piano from={36} to={95} real namesOnC /></section>
+      <section className="card pianocard"><h2>פסנתר חופשי </h2><Piano from={36} to={95} real namesOnC /></section>
     </div>
   );
 }

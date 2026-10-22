@@ -107,7 +107,7 @@ export default function Composer({ preset }) {
   };
   const removeSong = (id) => confirm('למחוק את השיר?') && api(`/compositions/${id}`, { method: 'DELETE' }).then(loadSaved);
   const leave = () => { if (dirty && !confirm('יש שינויים שלא נשמרו. לצאת בלי לשמור?')) return; setScreen('list'); loadSaved(); window.scrollTo(0, 0); };
-  const copySheet = () => navigator.clipboard.writeText(chordSheet(comp)).then(() => setUi({ busy: '', err: '', msg: 'גיליון האקורדים הועתק 📋' }));
+  const copySheet = () => navigator.clipboard.writeText(chordSheet(comp)).then(() => setUi({ busy: '', err: '', msg: 'גיליון האקורדים הועתק ' }));
   const play = () => { if (!playSong(comp, setHl)) setUi({ busy: '', err: '', msg: 'הוסיפי אקורדים כדי לשמוע את השיר' }); };
 
   // ---------------------------------------------------------------- list of songs
@@ -115,7 +115,7 @@ export default function Composer({ preset }) {
     return (
       <>
         <section className="card">
-          <h2>אקורדים לשיר 🎼</h2>
+          <h2>אקורדים לשיר </h2>
           <p className="muted">כותבות שיר (או מקבלות מילים מוכנות), מניחות אקורדים מעל המילים, שומעות כל אקורד, ובודקות אם הוא מתאים לסולם. אפשר לשמור, לפתוח ולערוך בכל זמן.</p>
           <button onClick={startNew}>＋ שיר חדש</button>
         </section>
@@ -144,8 +144,8 @@ export default function Composer({ preset }) {
           <Piano from={48} to={83} highlight={hl} />
           <div className="row">
             <button onClick={play}>▶ נגני את השיר</button>
-            <button className="ghost" onClick={() => setScreen('edit')}>✏️ עריכה</button>
-            <button className="ghost" onClick={copySheet}>📋 העתקת גיליון אקורדים</button>
+            <button className="ghost" onClick={() => setScreen('edit')}> עריכה</button>
+            <button className="ghost" onClick={copySheet}> העתקת גיליון אקורדים</button>
           </div>
           {ui.msg && <p className="okmsg">{ui.msg}</p>}
         </section>
@@ -181,7 +181,7 @@ export default function Composer({ preset }) {
         {lyricsReady && !editingLyrics ? (
           <div className="row">
             <span className="muted">{comp.sections.reduce((n, s) => n + s.lines.length, 0)} שורות ב-{comp.sections.length} חלקים</span>
-            <button className="ghost" onClick={() => { setRaw(toRaw(comp.sections)); setEditingLyrics(true); }}>✏️ עריכת המילים</button>
+            <button className="ghost" onClick={() => { setRaw(toRaw(comp.sections)); setEditingLyrics(true); }}> עריכת המילים</button>
           </div>
         ) : editingLyrics ? (
           <>
@@ -234,10 +234,10 @@ export default function Composer({ preset }) {
       <div className="savebar">
         <button onClick={play} disabled={!totalChords}>▶ נגני</button>
         <button className="ghost" onClick={fullCheck} disabled={!totalChords || ui.busy === 'check'}>{ui.busy === 'check' ? 'בודקת...' : '✓ בדיקה מלאה'}</button>
-        <button className="ghost" onClick={copySheet} disabled={!lyricsReady}>📋 העתקה</button>
+        <button className="ghost" onClick={copySheet} disabled={!lyricsReady}> העתקה</button>
         <span className="grow" />
         {dirty && <small className="muted">יש שינויים שלא נשמרו</small>}
-        <button className="savebtn" onClick={save} disabled={ui.busy === 'save' || !lyricsReady}>💾 {comp.id ? 'שמירה' : 'שמירת השיר'}</button>
+        <button className="savebtn" onClick={save} disabled={ui.busy === 'save' || !lyricsReady}> {comp.id ? 'שמירה' : 'שמירת השיר'}</button>
         {comp.id && !dirty && <button className="ghost" onClick={() => setScreen('view')}>לצפייה בשיר</button>}
       </div>
     </>

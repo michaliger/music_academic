@@ -25,7 +25,7 @@ export default function ScaleExplorer({ initial = 'major' }) {
 
   return (
     <div className="scalex">
-      <b>🎼 חקרי את כל הסולמות: בחרי סולם ושורש</b>
+      <b> חקרי את כל הסולמות: בחרי סולם ושורש</b>
       <div className="chips">{SCALES.map((s) => <button key={s.id} className={`chip g ${id === s.id ? 'on' : ''}`} onClick={() => pickScale(s.id)}>{s.name}</button>)}</div>
       <div className="roots small" role="group" aria-label="צליל שורש">{PC_EN.map((n, i) => <button key={i} className={`root ${root === i ? 'on' : ''}`} onClick={() => pickRoot(i)}>{n}</button>)}</div>
       <div className="scalehead"><h4>{PC_EN[root]} {scale.name}</h4><button onClick={() => play()}>▶ עולה ויורד</button></div>

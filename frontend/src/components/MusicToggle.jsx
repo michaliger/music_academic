@@ -9,7 +9,7 @@ export default function MusicToggle({ compact = false }) {
   return (
     <div className={`musictoggle ${compact ? 'compact' : ''} ${on ? 'on' : ''}`}>
       <button type="button" onClick={() => (on ? ambient.stop() : ambient.start())} aria-pressed={on} title="מוזיקת רקע שקטה">
-        {on ? '🔊' : '🔈'}{!compact && <span>{on ? 'מוזיקת רקע פועלת' : 'הפעילי מוזיקת רקע'}</span>}
+        <span className="mt-note">{on ? '♫' : '♪'}</span>{!compact && <span>{on ? 'מוזיקת רקע פועלת' : 'הפעילי מוזיקת רקע'}</span>}
       </button>
       {on && (
         <input type="range" min="0" max="1" step="0.05" value={ambient.getVolume()} aria-label="עוצמת מוזיקת הרקע"

@@ -16,6 +16,18 @@ router.get('/status', async (req, res) => {
     try { status.ok = Boolean(await askModel({ system: 'ענה במילה אחת.', user: 'כתוב: שלום', temperature: 0 })); }
     catch (e) { status.ok = false; status.error = hideKeys(e.detail || e.message); }
   }
+  // ?keys=1 checks every configured Gemini key separately (only the last 4 characters are shown), to find the one that does not work
+  if (req.query.keys && provider === 'gemini') {
+    status.keyChecks = [];
+    for (const [i, key] of config.geminiKeys.entries()) {
+      const label = `#${i + 1} ...${key.slice(-4)}`;
+      try {
+        const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1', { headers: { 'x-goog-api-key': key } });
+        const reason = r.ok ? 'ok' : r.status === 400 ? 'key rejected (not valid)' : r.status === 403 ? 'key blocked or API not enabled' : r.status === 429 ? 'quota used up' : `HTTP ${r.status}`;
+        status.keyChecks.push({ key: label, status: r.status, result: reason });
+      } catch (e) { status.keyChecks.push({ key: label, result: hideKeys(e.message) }); }
+    }
+  }
   res.json(status);
 });
 

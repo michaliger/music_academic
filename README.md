@@ -1,6 +1,6 @@
-# Neima (נעימה) — AI-Driven Music Theory Learning Platform
+# Crescendo (קרשנדו) — AI-Driven Music Theory Learning Platform
 
-Neima ("נעימה" — a pleasant melody; the subtitle is "עולם המוזיקה", the world of music) is a full-stack learning platform for music theory (Hebrew, right-to-left UI).
+Crescendo ("קרשנדו" — the musical sign for getting gradually louder, a picture of learning that keeps growing; the subtitle is "עולם המוזיקה", the world of music) is a full-stack learning platform for music theory (Hebrew, right-to-left UI).
 Students follow a structured curriculum with interactive piano examples and graded quizzes, ask an **AI music teacher** questions by category and sub-category,
 write chords over song lyrics with an automatic **harmony check**, compete with friends, and join classes run by teachers.
 An admin dashboard shows every user and their prompt history.

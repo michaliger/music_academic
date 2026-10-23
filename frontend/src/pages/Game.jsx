@@ -21,6 +21,19 @@ const SONGS = [
     notes: [[2, 1], [2, 1], [2, 2], [2, 1], [2, 1], [2, 2], [2, 1], [4, 1], [0, 1.5], [1, .5], [2, 4],
       [3, 1], [3, 1], [3, 1.5], [3, .5], [3, 1], [2, 1], [2, 1], [2, .5], [2, .5], [2, 1], [1, 1], [1, 1], [2, 1], [1, 2], [4, 2]] },
 ];
+// "Your own song": notes by Hebrew name or letter, separated by spaces; a dash "-" holds the previous note one more beat.
+const NAME_TO_LANE = { 'דו': 0, 'רה': 1, 'מי': 2, 'פה': 3, 'סול': 4, 'לה': 5, 'סי': 6, "דו'": 7, 'דו2': 7, c: 0, d: 1, e: 2, f: 3, g: 4, a: 5, b: 6, c2: 7 };
+export function parseTune(text) {
+  const notes = [];
+  for (const raw of String(text).trim().split(/[\s,]+/)) {
+    const tok = raw.toLowerCase();
+    if (!tok) continue;
+    if (tok === '-' || tok === '–') { if (notes.length) notes[notes.length - 1][1] += 1; continue; }
+    if (tok in NAME_TO_LANE) notes.push([NAME_TO_LANE[tok], 1]);
+    else return { error: `לא הבנתי את ״${raw}״. כותבים: דו רה מי פה סול לה סי דו׳ (או C D E F G A B), ומקף להארכה.` };
+  }
+  return notes.length >= 3 ? { notes } : { error: 'צריך לפחות שלושה תווים.' };
+}
 const SPEEDS = [['איטי', 0.8], ['רגיל', 1], ['מהיר', 1.25]];
 const FALL = 2.1; // seconds a note needs from the top to the line
 const LEAD = 3; // countdown seconds
@@ -38,6 +51,8 @@ export default function Game() {
   const [hud, setHud] = useState({ score: 0, combo: 0, text: '' });
   const [result, setResult] = useState(null);
   const [best, setBest] = useState({});
+  const [tune, setTune] = useState('');
+  const [tuneErr, setTuneErr] = useState('');
   const canvasRef = useRef(null);
   const game = useRef(null);
 
@@ -199,6 +214,13 @@ export default function Game() {
             </button>
           ))}
         </div>
+        <section className="card">
+          <h2>שיר משלך</h2>
+          <p className="muted">מכירה מנגינה? כתבי אותה בתווים ושחקי אותה. למשל: <bdi>מי מי פה סול סול פה מי רה - דו</bdi> (מקף מאריך את התו הקודם). אפשר גם באותיות: <bdi dir="ltr">E E F G G F E D - C</bdi>.</p>
+          <textarea rows="2" value={tune} onChange={(e) => { setTune(e.target.value); setTuneErr(''); }} placeholder="דו רה מי דו  דו רה מי דו  מי פה סול -" />
+          {tuneErr && <div className="error">{tuneErr}</div>}
+          <button className="ghost" onClick={() => { const r = parseTune(tune); if (r.error) { setTuneErr(r.error); return; } setSong({ id: 'mine', title: 'השיר שלך', level: 'שלך', bpm: 96, notes: r.notes }); }}>השתמשי בשיר הזה</button>
+        </section>
         <div className="row"><button className="cta" onClick={begin}>התחילי לשחק: {song.title}</button></div>
       </div>
     );

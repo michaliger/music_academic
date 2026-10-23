@@ -15,8 +15,8 @@ export default function Friends() {
   }
   const act = (path, method) => api(path, { method }).then(reload).catch((x) => setE2(x.message));
   // invitation text; sent through Gmail, WhatsApp, or copied (a plain mailto: link does nothing without a mail program)
-  const inviteText = `היי! אני לומדת מוזיקה באתר נעימה ונהנית מזה. בואי ללמוד איתי ולהתחרות על הדירוג:\n${location.origin}`;
-  const gmailLink = (to) => `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent('הצטרפי אליי לנעימה')}&body=${encodeURIComponent(inviteText)}`;
+  const inviteText = `היי! אני לומדת מוזיקה באתר קרשנדו ונהנית מזה. בואי ללמוד איתי ולהתחרות על הדירוג:\n${location.origin}`;
+  const gmailLink = (to) => `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent('הצטרפי אליי לקרשנדו')}&body=${encodeURIComponent(inviteText)}`;
   const waLink = `https://wa.me/?text=${encodeURIComponent(inviteText)}`;
   const copyInvite = () => navigator.clipboard.writeText(inviteText).then(() => setMsg('נוסח ההזמנה הועתק, אפשר להדביק בכל מקום'));
   if (err) return <div className="error">{err}</div>;

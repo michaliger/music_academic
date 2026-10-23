@@ -18,8 +18,8 @@ export const config = {
   // Keys are trimmed and stripped of quotes: a stray space or quote in .env is the most common reason a key "is not picked up".
   // One or several Gemini keys: GEMINI_API_KEYS="key1,key2,key3" (comma, space or new line) and/or GEMINI_API_KEY. When one key runs out of quota the next one is used.
   geminiKeys: [...new Set([
-    ...String(process.env.GEMINI_API_KEYS || '').split(/[\s,;]+/).map(clean),
-    clean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
+    // several keys may be written in either variable, separated by commas, spaces or new lines
+    ...[process.env.GEMINI_API_KEYS, process.env.GEMINI_API_KEY, process.env.GOOGLE_API_KEY].flatMap((v) => String(v || '').split(/[\s,;]+/).map(clean)),
     openaiRaw && !looksOpenAI(openaiRaw) ? openaiRaw : '',
   ].filter(Boolean))],
   geminiModel: clean(process.env.GEMINI_MODEL) || 'gemini-2.5-flash',

@@ -13,6 +13,10 @@ let keyCursor = 0; // spreads the load: each request starts with the next key
 const REQUEST_MS = 12000; // one HTTP call never waits longer than this
 const TOTAL_MS = 30000; // the whole question gives up after this long, so the student never waits "for hours"
 
+const dead = new Map(); // address+model that failed for good (retired model, address blocked by a filter): skipped for a while so later questions are fast
+const isDead = (url) => (dead.get(url) || 0) > Date.now();
+let thinkingBroken = false; // set if the API rejects the "thinking off" setting
+
 const fetchTimeout = async (url, options) => {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), REQUEST_MS);
@@ -36,6 +40,7 @@ async function geminiWithKey(key, makeBody, deadline) {
   let keyProblem = false;
   for (const model of models) {
     for (const url of endpoints(model)) {
+      if (isDead(url)) continue;
       if (Date.now() > deadline) { const e = new Error(last || 'timeout'); e.transient = false; e.keyProblem = false; throw e; }
       let res;
       try { res = await fetchTimeout(url, { method: 'POST', headers, body: makeBody(model) }); }
@@ -49,6 +54,8 @@ async function geminiWithKey(key, makeBody, deadline) {
       }
       last = `Gemini ${res.status} (${model} @ ${new URL(url).host}): ${(await res.text()).slice(0, 300)}`;
       console.error(last);
+      if (res.status === 400 && /thinking/i.test(last) && !thinkingBroken) { thinkingBroken = true; transient = true; continue; }
+      if ([404, 418].includes(res.status)) dead.set(url, Date.now() + 10 * 60_000);
       if (res.status === 400 && /API key|API_KEY/i.test(last)) { const e = new Error(last); e.keyProblem = true; throw e; } // a bad key will not work with any model: next key at once
       if (res.status === 401 || res.status === 403) { const e = new Error(last); e.keyProblem = true; throw e; }
       if (res.status === 503) transient = true;
@@ -64,14 +71,16 @@ async function geminiWithKey(key, makeBody, deadline) {
 }
 
 /** Gemini generateContent. Several keys are tried in turn (a key without quota or a rejected key is skipped); busy models are retried once after a short wait. */
-async function askGemini({ system, user, json, temperature }) {
+async function askGemini({ system, user, json, temperature, maxTokens }) {
   const makeBody = (model) => JSON.stringify({
     systemInstruction: { parts: [{ text: system }] },
     contents: [{ role: 'user', parts: [{ text: user }] }],
     generationConfig: {
       temperature,
+      ...(maxTokens && { maxOutputTokens: maxTokens }),
       ...(json && { responseMimeType: 'application/json' }),
-      ...(/^gemini-2\.5-flash$/.test(model) && { thinkingConfig: { thinkingBudget: 0 } }), // no hidden "thinking" time: much faster answers
+      ...(!thinkingBroken && /^gemini-2\.5-flash$/.test(model) && { thinkingConfig: { thinkingBudget: 0 } }), // no hidden "thinking" time: much faster answers
+      ...(!thinkingBroken && /^gemini-3/.test(model) && !/lite/.test(model) && { thinkingConfig: { thinkingLevel: 'minimal' } }),
     },
   });
   const keys = config.geminiKeys;
@@ -117,9 +126,9 @@ async function askOpenAI({ system, user, json, temperature }) {
 }
 
 /** One model call. Returns the text (a JSON string when json = true). The real reason of a failure is logged, the client gets a 502. */
-export async function askModel({ system, user, json = false, temperature = 0.7 }) {
+export async function askModel({ system, user, json = false, temperature = 0.7, maxTokens }) {
   try {
-    const args = { system, user, json, temperature };
+    const args = { system, user, json, temperature, maxTokens };
     return aiProvider() === 'gemini' ? await askGemini(args) : await askOpenAI(args);
   } catch (e) {
     console.error('AI request failed:', e.message);
@@ -150,12 +159,13 @@ export async function answerPrompt(ctx) {
     const answer = await askModel({
       system: [
         'את מורה למוזיקה מקצועית וחמה, שמלמדת תלמידות בעברית ברורה ופשוטה (פנייה בלשון נקבה).',
-        'ענִי רק על השאלה ובקצרה: עד כ-250 מילים. מבנה: הסבר קצר, שתי דוגמאות מוזיקליות, ותרגיל אחד קטן בסוף.',
+        'ענִי רק על השאלה ובקצרה: עד כ-130 מילים. מבנה: הסבר קצר, שתי דוגמאות מוזיקליות, ותרגיל אחד קטן בסוף.',
         'דיוק הוא קודם כול: כל תו, אינטרוול ואקורד חייבים להיות נכונים. אם את לא בטוחה בעובדה, אל תכתבי אותה. בדקי כל דוגמה לפני שאת כותבת אותה.',
         'עיצוב: טקסט פשוט עם כותרות קצרות (שורה שמתחילה ב-##), רשימות עם מקף, ו-**הדגשה** במשורה. בלי תגיות HTML, בלי טבלאות ובלי בלוקי קוד.',
         'אל תכללי את התשובות לתרגיל באותה תשובה; כתבי "נסי לענות בעצמך" ותני רמז אחד בלבד.',
         'בלי פתיחות ארוכות ובלי דימויים מוזרים. השתמשי בשמות התווים העבריים (דו, רה, מי) וליד כל אחד את האות הלועזית בסוגריים רק כשצריך.',
       ].join('\n'),
+      maxTokens: 500,
       user: `קטגוריה: ${ctx.category}\nתת-קטגוריה: ${ctx.subCategory}\nבקשה: ${ctx.prompt}`,
     });
     return answer || demoAnswer(ctx);

@@ -72,6 +72,7 @@ export default function Game() {
   const [tuneErr, setTuneErr] = useState('');
   const [chromatic, setChromatic] = useState(false);
   const [mine, setMine] = useState(loadTunes);
+  const [mode, setMode] = useState('songs'); // songs | build | text
   const canvasRef = useRef(null);
   const game = useRef(null);
 
@@ -206,7 +207,7 @@ export default function Game() {
         const score = Math.round(g.score);
         if (score > load(song.id)) save(song.id, score);
         setResult({ score, acc, stars, perfects: g.perfects, goods: g.goods, misses: g.misses, maxCombo: g.maxCombo, total });
-        setPhase('done');
+        setPhase('done'); window.scrollTo(0, 0);
         return;
       }
       raf = requestAnimationFrame(frame);
@@ -228,15 +229,19 @@ export default function Game() {
         <section className="card gamehead">
           <h2>משחק הפסנתר</h2>
           <p className="muted">תווים נופלים על קלידים. לוחצים על הקליד המתאים ברגע שהתו מגיע לקו הזהב, במקלדת של המחשב (<bdi dir="ltr">A S D F G H J K</bdi>, ובמצב שחורים גם <bdi dir="ltr">W E T Y U</bdi>) או בנגיעה. כל לחיצה מנגנת את הצליל, כך שבסוף גם למדתם את המנגינה.</p>
-          <div className="fingertip">
-            <b>איך מניחים את האצבעות?</b>
+          <details className="fingertip">
+            <summary><b>איך מניחים את האצבעות?</b></summary>
             <p>שמי את שתי הידיים על השורה האמצעית, ככה שכל האצבעות מוכנות מראש: ביד שמאל הזרת על <bdi dir="ltr">A</bdi>, הקמיצה על <bdi dir="ltr">S</bdi>, האמה על <bdi dir="ltr">D</bdi> והאצבע המורה על <bdi dir="ltr">F</bdi>. ביד ימין המורה על <bdi dir="ltr">J</bdi>, האמה על <bdi dir="ltr">K</bdi>, ואת <bdi dir="ltr">G</bdi> ו-<bdi dir="ltr">H</bdi> לוחצים עם אותה אצבע מורה, שזזה צעד אחד. בקליטים <bdi dir="ltr">F</bdi> ו-<bdi dir="ltr">J</bdi> יש בליטה קטנה: מרגישים אותה ויודעים איפה הבית, בלי להסתכל על המקלדת. העיניים נשארות על המסך, ואחרי כל לחיצה חוזרים למקום.</p>
             <p>בתווים השחורים (למעלה בשורה <bdi dir="ltr">W E T Y U</bdi>) משתמשים באותה אצבע שנמצאת מתחת לתו, ומרימים אותה שורה אחת למעלה.</p>
-          </div>
+          </details>
           <div className="chips"><button className={`chip ${chromatic ? 'on' : ''}`} onClick={() => setChromatic(!chromatic)}>{chromatic ? 'תווים שחורים: פועל' : 'תווים שחורים: כבוי'}</button></div>
           <div className="chips">{SPEEDS.map(([l, v]) => <button key={l} className={`chip ${speed === v ? 'on' : ''}`} onClick={() => setSpeed(v)}>{l}</button>)}</div>
         </section>
-        <div className="songgrid">
+        <div className="startbar"><button className="cta" onClick={begin}>▶ התחילי לשחק: {song.title}</button></div>
+        <div className="chips modes">
+          {[['songs', 'שירים מוכנים'], ['build', 'הלחנה בלחיצות'], ['text', 'כתיבה בתווים']].map(([k, l]) => <button key={k} className={`chip ${mode === k ? 'on' : ''}`} onClick={() => setMode(k)}>{l}</button>)}
+        </div>
+        {mode === 'songs' && <div className="songgrid">
           {SONGS.map((s) => (
             <button key={s.id} className={`songcard ${song.id === s.id ? 'on' : ''}`} onClick={() => setSong(s)}>
               <b>{s.title}</b>
@@ -244,8 +249,8 @@ export default function Game() {
               <span className="bestscore">{best[s.id] ? `השיא שלך: ${best[s.id]}` : 'עוד לא שיחקת'}</span>
             </button>
           ))}
-        </div>
-        {mine.length > 0 && (
+        </div>}
+        {mode === 'songs' && mine.length > 0 && (
           <>
             <h3 className="mytunes">השירים ששמרת</h3>
             <div className="songgrid">
@@ -260,23 +265,22 @@ export default function Game() {
             </div>
           </>
         )}
-        <TuneEditor onSave={(t) => { persist([...mine, t]); setSong({ ...t, level: 'שלך' }); }} />
-        <section className="card">
-          <h2>או כתבי בטקסט</h2>
+        {mode === 'build' && <TuneEditor onSave={(t) => { persist([...mine, t]); setSong({ ...t, level: 'שלך' }); setMode('songs'); }} />}
+        {mode === 'text' && <section className="card">
+          <h2>כתיבה בתווים</h2>
           <p className="muted">למשל: <bdi>מי מי פה סול סול פה מי רה - דו</bdi> (מקף מאריך את התו הקודם, קו תחתון הוא שקט, ♯ או # לתו שחור). אפשר גם באותיות: <bdi dir="ltr">E E F G G F E D - C</bdi>.</p>
           <textarea rows="2" value={tune} onChange={(e) => { setTune(e.target.value); setTuneErr(''); }} placeholder="דו רה מי דו  דו רה מי דו  מי פה סול -" />
           {tuneErr && <div className="error">{tuneErr}</div>}
-          <button className="ghost" onClick={() => { const r = parseTune(tune); if (r.error) { setTuneErr(r.error); return; } const t = { id: `t${Date.now()}`, title: 'שיר שלי', bpm: 96, notes: r.notes }; persist([...mine, t]); setSong({ ...t, level: 'שלך' }); }}>שמרי ובחרי</button>
-        </section>
-        <div className="row"><button className="cta" onClick={begin}>התחילי לשחק: {song.title}</button></div>
+          <button className="ghost" onClick={() => { const r = parseTune(tune); if (r.error) { setTuneErr(r.error); return; } const t = { id: `t${Date.now()}`, title: 'שיר שלי', bpm: 96, notes: r.notes }; persist([...mine, t]); setSong({ ...t, level: 'שלך' }); setMode('songs'); }}>שמרי ובחרי</button>
+        </section>}
       </div>
     );
   }
 
   return (
     <div className="game">
-      <div className="gamehud"><span>ניקוד <b>{hud.score}</b></span><span>רצף <b>{hud.combo}</b></span><span className="grow" /><button className="ghost" onClick={() => setPhase('menu')}>יציאה</button></div>
-      <canvas ref={canvasRef} className="gamecanvas" onPointerDown={phase === 'play' ? onPointer : undefined} />
+      {phase === 'play' && <div className="gamehud"><span>ניקוד <b>{hud.score}</b></span><span>רצף <b>{hud.combo}</b></span><span className="grow" /><button className="ghost" onClick={() => setPhase('menu')}>יציאה</button></div>}
+      {phase === 'play' && <canvas ref={canvasRef} className="gamecanvas" onPointerDown={onPointer} />}
       {phase === 'done' && result && (
         <section className="card gameresult">
           {result.stars === 3 && <Confetti />}
@@ -294,6 +298,7 @@ export default function Game() {
 const DURS = [['½', 0.5], ['1', 1], ['2', 2], ['4', 4]];
 function TuneEditor({ onSave }) {
   const [notes, setNotes] = useState([]); // [semi | null, beats]
+  const [sel, setSel] = useState(-1); // index of the selected note
   const [dur, setDur] = useState(1);
   const [black, setBlack] = useState(false);
   const [title, setTitle] = useState('');
@@ -301,7 +306,18 @@ function TuneEditor({ onSave }) {
   const [msg, setMsg] = useState('');
   const timers = useRef([]);
   const lanes = lanesFor(black);
-  const add = (semi) => { setNotes((n) => [...n, [semi, dur]]); setMsg(''); if (semi !== null) playNow([60 + semi]); };
+  const change = (fn) => setNotes((n) => fn(n.map((x) => [...x])));
+  // a new note goes right after the selected one (or at the end)
+  const add = (semi) => {
+    const at = sel >= 0 ? sel + 1 : notes.length;
+    change((n) => { n.splice(at, 0, [semi, dur]); return n; });
+    setSel(at); setMsg('');
+    if (semi !== null) playNow([60 + semi]);
+  };
+  const setDuration = (v) => { setDur(v); if (sel >= 0) change((n) => { n[sel][1] = v; return n; }); };
+  const choose = (i) => { setSel(i === sel ? -1 : i); if (i !== sel) { setDur(notes[i][1]); if (notes[i][0] !== null) playNow([60 + notes[i][0]]); } };
+  const remove = () => { change((n) => { n.splice(sel, 1); return n; }); setSel(Math.min(sel, notes.length - 2)); };
+  const shift = (d) => { const cur = notes[sel]?.[0]; if (cur === null || cur === undefined) return; const v = cur + d; if (v < 0 || v > 12 || (!black && isBlack(v))) return; change((n) => { n[sel][0] = v; return n; }); playNow([60 + v]); };
   const stop = () => { timers.current.forEach(clearTimeout); timers.current = []; };
   useEffect(() => stop, []);
   function preview() {
@@ -312,24 +328,32 @@ function TuneEditor({ onSave }) {
   const real = notes.filter((n) => n[0] !== null).length;
   function save() {
     if (real < 3) { setMsg('צריך לפחות שלושה תווים.'); return; }
-    onSave({ id: `t${Date.now()}`, title: title.trim() || 'שיר שלי', bpm, notes }); setNotes([]); setTitle(''); setMsg('נשמר! הוא מופיע למעלה בין השירים ששמרת.');
+    onSave({ id: `t${Date.now()}`, title: title.trim() || 'שיר שלי', bpm, notes });
   }
+  const sn = sel >= 0 ? notes[sel] : null;
   return (
     <section className="card tuneedit">
-      <h2>הלחנה שלך</h2>
-      <p className="muted">בחרי משך ולחצי על התווים כדי להוסיף אותם למנגינה. אפשר להוסיף שקט, לשמוע את התוצאה, ולשמור: השיר יישאר כאן גם אחרי שסוגרים את האתר.</p>
-      <div className="chips"><span className="muted">משך (בפעימות):</span>{DURS.map(([l, v]) => <button key={v} className={`chip ${dur === v ? 'on' : ''}`} onClick={() => setDur(v)}>{l}</button>)}
-        <button className={`chip ${black ? 'on' : ''}`} onClick={() => setBlack(!black)}>{black ? 'תווים שחורים: פועל' : 'תווים שחורים: כבוי'}</button></div>
+      <h2>הלחנה בלחיצות</h2>
+      <p className="muted">לוחצים על תו בקלידים כדי להוסיף אותו. לחיצה על תו שכבר במנגינה בוחרת אותו, ואז אפשר לשנות לו משך, להזיז אותו למעלה או למטה, או למחוק אותו. תו חדש נכנס אחרי התו שבחרת.</p>
+      <div className="chips"><button className={`chip ${black ? 'on' : ''}`} onClick={() => setBlack(!black)}>{black ? 'תווים שחורים: פועל' : 'תווים שחורים: כבוי'}</button></div>
       <div className="notepad">{lanes.map((l) => <button key={l.semi} className={`nbtn ${l.black ? 'blk' : ''}`} onClick={() => add(l.semi)}>{l.name}</button>)}<button className="nbtn rest" onClick={() => add(null)}>שקט</button></div>
-      <div className="seq" aria-live="polite">{notes.length ? notes.map(([n, d], i) => <span key={i} className="tn">{n === null ? 'שקט' : NAMES[n]}<sup>{d}</sup></span>) : <span className="muted">עוד אין תווים.</span>}</div>
+      <div className="seq" aria-live="polite">{notes.length ? notes.map(([n, d], i) => <button key={i} className={`tn ${i === sel ? 'sel' : ''}`} onClick={() => choose(i)}>{n === null ? 'שקט' : NAMES[n]}<sup>{d}</sup></button>) : <span className="muted">עוד אין תווים.</span>}</div>
+      <div className="selbar">
+        <span className="muted">{sn ? `נבחר: ${sn[0] === null ? 'שקט' : NAMES[sn[0]]}` : 'משך לתו הבא:'}</span>
+        {DURS.map(([l, v]) => <button key={v} className={`chip ${(sn ? sn[1] : dur) === v ? 'on' : ''}`} onClick={() => setDuration(v)}>{l}</button>)}
+        {sn && <>
+          <button className="ghost small" onClick={() => shift(1)} disabled={sn[0] === null}>חצי טון למעלה</button>
+          <button className="ghost small" onClick={() => shift(-1)} disabled={sn[0] === null}>חצי טון למטה</button>
+          <button className="ghost small danger" onClick={remove}>מחיקת התו</button>
+        </>}
+      </div>
       <div className="row">
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="שם לשיר" maxLength={40} />
         <label className="muted">קצב <input type="range" min="60" max="160" value={bpm} onChange={(e) => setBpm(Number(e.target.value))} /> {bpm}</label>
       </div>
       <div className="row">
         <button className="ghost" onClick={preview} disabled={!notes.length}>שמיעה</button>
-        <button className="ghost" onClick={() => setNotes((n) => n.slice(0, -1))} disabled={!notes.length}>מחיקת תו אחרון</button>
-        <button className="ghost" onClick={() => { stop(); setNotes([]); }} disabled={!notes.length}>ניקוי</button>
+        <button className="ghost" onClick={() => { stop(); setNotes([]); setSel(-1); }} disabled={!notes.length}>ניקוי הכל</button>
         <button onClick={save}>שמירה</button>
       </div>
       {msg && <p className="muted">{msg}</p>}

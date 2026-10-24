@@ -18,14 +18,14 @@ import Logo from './components/Logo.jsx';
 import NotesBg from './components/NotesBg.jsx';
 import { ambient } from './music/audio.js';
 
-const TABS = [['home', 'בית'], ['map', 'מפת הלימוד'], ['me', 'האזור שלי'], ['library', 'ספרייה'], ['practice', 'תרגול'], ['game', 'משחק'], ['compose', 'אקורדים לשיר'], ['friends', 'חברות'], ['classes', 'כיתות'], ['ask', 'שאלי את המורה']];
+const TABS = [['home', 'בית'], ['map', 'מפת הלימוד'], ['library', 'ספרייה'], ['practice', 'תרגול'], ['game', 'משחק'], ['compose', 'אקורדים לשיר'], ['friends', 'חברות'], ['classes', 'כיתות'], ['ask', 'שאלי את המורה']];
 
 export default function App() {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user') || 'null'));
   // A shared link (?lesson=<id>) opens that lesson right after login.
   const sharedLesson = new URLSearchParams(location.search).get('lesson');
   const [view, setView] = useState(sharedLesson ? { tab: 'lesson', arg: sharedLesson } : { tab: 'home' });
-  const go = (tab, arg) => { setView({ tab, arg }); window.scrollTo(0, 0); };
+  const go = (tab, arg) => { setView({ tab, arg }); window.scrollTo(0, 0); setTimeout(() => window.scrollTo(0, 0), 60); };
 
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -50,8 +50,10 @@ export default function App() {
         <button className="brand" onClick={() => go('home')} aria-label="לדף הבית"><Logo size={38} /><span className="brand-text"><b>קרשנדו</b><small>עולם המוזיקה</small></span></button>
         <nav>{tabs.map(([key, label]) => <button key={key} className={`tab ${active === key ? 'on' : ''}`} onClick={() => go(key)}>{label}</button>)}</nav>
         <div className="who">
-          <span className="avatar" aria-hidden="true">{[...user.name][0]}</span>
-          <span className="whotext"><b>{user.name}</b><small className={`rolepill ${user.role}`}>{ROLE_LABEL[user.role]}</small></span>
+          <button className={`whobtn ${view.tab === 'me' ? 'on' : ''}`} onClick={() => go('me')} title="האזור האישי שלי: רצף, בחנים ויומן">
+            <span className="avatar" aria-hidden="true">{[...user.name][0]}</span>
+            <span className="whotext"><b>{user.name}</b><small className={`rolepill ${user.role}`}>{ROLE_LABEL[user.role]} · האזור שלי</small></span>
+          </button>
           <button className="logout" onClick={logout} title="יציאה מהחשבון">יציאה</button>
         </div>
       </header>

@@ -31,6 +31,7 @@ export default function LessonView({ id, go }) {
     api(`/lessons/${id}`).then(setL).catch((e) => setErr(e.message));
     window.scrollTo(0, 0);
   }, [id]);
+  useEffect(() => { if (L) { window.scrollTo(0, 0); requestAnimationFrame(() => window.scrollTo(0, 0)); } }, [L?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { api('/courses').then(setMap).catch(() => {}); }, [id]);
 
   async function share() {

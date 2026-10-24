@@ -10,9 +10,19 @@ export const aiProvider = () => (config.geminiKey ? 'gemini' : config.openaiKey 
 export const isAiEnabled = () => aiProvider() !== null;
 
 let keyCursor = 0; // spreads the load: each request starts with the next key
+const REQUEST_MS = 12000; // one HTTP call never waits longer than this
+const TOTAL_MS = 30000; // the whole question gives up after this long, so the student never waits "for hours"
+
+const fetchTimeout = async (url, options) => {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), REQUEST_MS);
+  try { return await fetch(url, { ...options, signal: ctrl.signal }); }
+  catch (e) { throw new Error(e.name === 'AbortError' ? `timeout after ${REQUEST_MS / 1000}s (${new URL(url).host})` : e.message); }
+  finally { clearTimeout(timer); }
+};
 
 /** One pass over the models for a single key. Returns the text, or throws an Error whose `.transient` / `.keyProblem` flags tell the caller what to do next. */
-async function geminiWithKey(key, body) {
+async function geminiWithKey(key, makeBody, deadline) {
   const headers = { 'Content-Type': 'application/json', 'x-goog-api-key': key };
   // Keys that start with "AQ." are Vertex AI express-mode keys; they use a different address than AI Studio ("AIza...") keys.
   const endpoints = (model) => {
@@ -20,13 +30,16 @@ async function geminiWithKey(key, body) {
     const vertex = `https://aiplatform.googleapis.com/v1/publishers/google/models/${model}:generateContent`;
     return key.startsWith('AQ.') ? [vertex, studio] : [studio];
   };
-  const models = [...new Set([config.geminiModel, 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash', 'gemini-flash-latest'])];
+  const models = [...new Set([config.geminiModel, 'gemini-2.5-flash-lite', 'gemini-2.0-flash'])];
   let last = '';
   let transient = false;
   let keyProblem = false;
   for (const model of models) {
     for (const url of endpoints(model)) {
-      const res = await fetch(url, { method: 'POST', headers, body });
+      if (Date.now() > deadline) { const e = new Error(last || 'timeout'); e.transient = false; e.keyProblem = false; throw e; }
+      let res;
+      try { res = await fetchTimeout(url, { method: 'POST', headers, body: makeBody(model) }); }
+      catch (e) { last = `Gemini (${model}): ${e.message}`; console.error(last); transient = true; continue; }
       if (res.ok) {
         const data = await res.json();
         const text = (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('').trim();
@@ -36,9 +49,10 @@ async function geminiWithKey(key, body) {
       }
       last = `Gemini ${res.status} (${model} @ ${new URL(url).host}): ${(await res.text()).slice(0, 300)}`;
       console.error(last);
+      if (res.status === 400 && /API key|API_KEY/i.test(last)) { const e = new Error(last); e.keyProblem = true; throw e; } // a bad key will not work with any model: next key at once
+      if (res.status === 401 || res.status === 403) { const e = new Error(last); e.keyProblem = true; throw e; }
       if (res.status === 503) transient = true;
       else if (res.status === 429) { transient = true; keyProblem = true; } // quota used up: another key may still have some
-      else if (res.status === 401 || res.status === 403) keyProblem = true;
       // 418 = blocked by a content filter (e.g. NetFree) on that address; 400/404 = model or address not usable: try the next one
       else if (![404, 400, 418].includes(res.status)) throw new Error(last);
     }
@@ -49,22 +63,27 @@ async function geminiWithKey(key, body) {
   throw err;
 }
 
-/** Gemini generateContent. Several keys are tried in turn (a key without quota or a rejected key is skipped); busy models are retried after a short wait. */
+/** Gemini generateContent. Several keys are tried in turn (a key without quota or a rejected key is skipped); busy models are retried once after a short wait. */
 async function askGemini({ system, user, json, temperature }) {
-  const body = JSON.stringify({
+  const makeBody = (model) => JSON.stringify({
     systemInstruction: { parts: [{ text: system }] },
     contents: [{ role: 'user', parts: [{ text: user }] }],
-    generationConfig: { temperature, ...(json && { responseMimeType: 'application/json' }) },
+    generationConfig: {
+      temperature,
+      ...(json && { responseMimeType: 'application/json' }),
+      ...(/^gemini-2\.5-flash$/.test(model) && { thinkingConfig: { thinkingBudget: 0 } }), // no hidden "thinking" time: much faster answers
+    },
   });
   const keys = config.geminiKeys;
+  const deadline = Date.now() + TOTAL_MS;
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   let last = new Error('no Gemini key');
-  for (let pass = 0; pass < 3; pass++) {
+  for (let pass = 0; pass < 2; pass++) {
     let transient = false;
     for (let i = 0; i < keys.length; i++) {
       const key = keys[(keyCursor + i) % keys.length];
       try {
-        const text = await geminiWithKey(key, body);
+        const text = await geminiWithKey(key, makeBody, deadline);
         if (keys.length > 1) keyCursor = (keyCursor + 1) % keys.length;
         return text;
       } catch (e) {
@@ -73,9 +92,10 @@ async function askGemini({ system, user, json, temperature }) {
         if (e.keyProblem === undefined && !e.transient) throw e; // a real request error: another key will not help
         if (keys.length > 1) console.error(`Gemini key #${((keyCursor + i) % keys.length) + 1} did not work, trying the next one`);
       }
+      if (Date.now() > deadline) throw last;
     }
-    if (!transient) break;
-    await wait(1500 * (pass + 1));
+    if (!transient || Date.now() + 2000 > deadline) break;
+    await wait(1500);
   }
   throw last;
 }

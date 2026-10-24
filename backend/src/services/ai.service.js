@@ -30,7 +30,7 @@ async function geminiWithKey(key, makeBody, deadline) {
     const vertex = `https://aiplatform.googleapis.com/v1/publishers/google/models/${model}:generateContent`;
     return key.startsWith('AQ.') ? [vertex, studio] : [studio];
   };
-  const models = [...new Set([config.geminiModel, 'gemini-2.5-flash-lite', 'gemini-2.0-flash'])];
+  const models = [...new Set([config.geminiModel, 'gemini-3.5-flash-lite', 'gemini-flash-latest'])];
   let last = '';
   let transient = false;
   let keyProblem = false;

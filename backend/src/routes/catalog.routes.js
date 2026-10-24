@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listCategories, getCourses, getLesson, checkAnswer, submitQuiz } from '../controllers/catalog.controller.js';
+import { listCategories, getCourses, getLesson, checkAnswer, submitQuiz, myActivity } from '../controllers/catalog.controller.js';
 import { requireAuth } from '../middleware/auth.js';
 import { validate, idParam } from '../middleware/validate.js';
 import { answerCheckSchema, quizSchema } from '../validators/index.js';
@@ -7,6 +7,7 @@ import { answerCheckSchema, quizSchema } from '../validators/index.js';
 const router = Router();
 router.param('id', idParam);
 router.get('/categories', listCategories);
+router.get('/me/activity', requireAuth, myActivity);
 router.get('/courses', requireAuth, getCourses);
 router.get('/lessons/:id', requireAuth, getLesson);
 router.post('/lessons/:id/check', requireAuth, validate(answerCheckSchema), checkAnswer);

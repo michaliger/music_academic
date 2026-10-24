@@ -4,10 +4,15 @@ import { api } from '../api/client.js';
 import Bar from '../components/Bar.jsx';
 import { infoOf, summarize } from '../utils/courses.js';
 
-export default function LearningMap({ user, go }) {
+export default function LearningMap({ user, go, focus }) {
   const [data, setData] = useState(null);
   const [err, setErr] = useState('');
   useEffect(() => { api('/courses').then(setData).catch((e) => setErr(e.message)); }, []);
+  useEffect(() => {
+    if (!focus || !data) return;
+    const t = setTimeout(() => document.getElementById(`course-${focus}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+    return () => clearTimeout(t);
+  }, [focus, data]);
   if (err) return <div className="error">{err}</div>;
   if (!data) return <p className="muted">טוען...</p>;
 
@@ -68,7 +73,7 @@ export default function LearningMap({ user, go }) {
           const done = all.filter((l) => l.done).length;
           const [icon, blurb] = infoOf(course.name);
           return (
-            <section key={course.id} id={`course-${course.id}`} className={`card course c${ci % 5}`}>
+            <section key={course.id} id={`course-${course.id}`} className={`card course c${ci % 5} ${focus === course.id ? 'focused' : ''}`}>
               <div className="course-head">
                 <span className="cicon">{icon}</span>
                 <div><h3>{course.name}</h3><small className="muted">{blurb}</small></div>

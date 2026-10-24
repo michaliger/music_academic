@@ -1,7 +1,7 @@
 // OpenAPI spec, generated from a compact endpoint list: [method, path, summary, requiresAuth].
 const ENDPOINTS = [
   ['post', '/auth/register', 'Register', false], ['post', '/auth/login', 'Log in (returns JWT)', false],
-  ['get', '/categories', 'Categories with sub-categories', false], ['get', '/courses', 'Learning map with my progress'],
+  ['get', '/categories', 'Categories with sub-categories', false], ['get', '/courses', 'Learning map with my progress'], ['get', '/me/activity', 'My streak, totals and day-by-day activity'],
   ['get', '/lessons/{id}', 'Lesson content'], ['post', '/lessons/{id}/check', 'Check one quiz answer'],
   ['post', '/lessons/{id}/quiz', 'Submit a quiz (grades, awards XP)'],
   ['post', '/prompts', 'Send a prompt to the AI tutor'], ['get', '/prompts/me', 'My learning history'],

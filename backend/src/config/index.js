@@ -22,7 +22,7 @@ export const config = {
     ...[process.env.GEMINI_API_KEYS, process.env.GEMINI_API_KEY, process.env.GOOGLE_API_KEY].flatMap((v) => String(v || '').split(/[\s,;]+/).map(clean)),
     openaiRaw && !looksOpenAI(openaiRaw) ? openaiRaw : '',
   ].filter(Boolean))],
-  geminiModel: clean(process.env.GEMINI_MODEL) || 'gemini-2.5-flash',
+  geminiModel: (/^gemini-[3-9]|latest/.test(clean(process.env.GEMINI_MODEL)) ? clean(process.env.GEMINI_MODEL) : 'gemini-3.8-flash'),
   openaiKey: looksOpenAI(openaiRaw) ? openaiRaw : '',
   openaiModel: clean(process.env.OPENAI_MODEL) || 'gpt-4o-mini',
   adminPhone: process.env.ADMIN_PHONE || '0500000000',

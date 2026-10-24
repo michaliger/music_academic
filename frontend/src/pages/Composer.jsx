@@ -106,6 +106,8 @@ export default function Composer({ preset }) {
     catch (e) { setUi({ busy: '', err: e.message, msg: '' }); }
   };
   const removeSong = (id) => confirm('למחוק את השיר?') && api(`/compositions/${id}`, { method: 'DELETE' }).then(loadSaved);
+  const clearChords = () => confirm('למחוק את כל האקורדים מהשיר? המילים יישארו.') && (setLast(null), edit((c) => { c.sections.forEach((sec) => sec.lines.forEach((l) => { l.chords = []; })); return c; }));
+  const deleteThis = () => confirm('למחוק את השיר לגמרי?') && api(`/compositions/${comp.id}`, { method: 'DELETE' }).then(() => { setDirty(false); setScreen('list'); loadSaved(); window.scrollTo(0, 0); }).catch((e) => setUi({ busy: '', err: e.message, msg: '' }));
   const leave = () => { if (dirty && !confirm('יש שינויים שלא נשמרו. לצאת בלי לשמור?')) return; setScreen('list'); loadSaved(); window.scrollTo(0, 0); };
   const copySheet = () => navigator.clipboard.writeText(chordSheet(comp)).then(() => setUi({ busy: '', err: '', msg: 'גיליון האקורדים הועתק ' }));
   const play = () => { if (!playSong(comp, setHl)) setUi({ busy: '', err: '', msg: 'הוסיפי אקורדים כדי לשמוע את השיר' }); };
@@ -235,6 +237,8 @@ export default function Composer({ preset }) {
         <button onClick={play} disabled={!totalChords}>▶ נגני</button>
         <button className="ghost" onClick={fullCheck} disabled={!totalChords || ui.busy === 'check'}>{ui.busy === 'check' ? 'בודקת...' : '✓ בדיקה מלאה'}</button>
         <button className="ghost" onClick={copySheet} disabled={!lyricsReady}> העתקה</button>
+        <button className="ghost" onClick={clearChords} disabled={!totalChords}>ניקוי כל האקורדים</button>
+        {comp.id && <button className="ghost danger" onClick={deleteThis}>מחיקת השיר</button>}
         <span className="grow" />
         {dirty && <small className="muted">יש שינויים שלא נשמרו</small>}
         <button className="savebtn" onClick={save} disabled={ui.busy === 'save' || !lyricsReady}> {comp.id ? 'שמירה' : 'שמירת השיר'}</button>

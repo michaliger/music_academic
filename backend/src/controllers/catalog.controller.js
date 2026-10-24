@@ -2,6 +2,7 @@ import { Category, SubCategory, Lesson, Progress, User } from '../models/index.j
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { httpError } from '../utils/httpError.js';
 import { statsFor, emptyStats } from '../services/stats.service.js';
+import { logActivity, activityFor } from '../services/activity.service.js';
 
 const PASS_SCORE = 60; // % needed to complete a lesson
 const byOrder = (a, b) => (a.order ?? 999) - (b.order ?? 999);
@@ -19,7 +20,7 @@ export const listCategories = asyncHandler(async (_req, res) => {
   res.json(cats.sort(byOrder).map((c) => ({
     ...c.toJSON(),
     subCategories: subs.filter((s) => sameId(s.categoryId, c._id)).sort(byOrder).map((s) => s.toJSON()),
-  })));
+  })).filter((c) => c.subCategories.length)); // old categories without units cannot be asked about
 });
 
 /** The learning map: course -> unit -> lessons, flagged with the user's progress. */
@@ -49,6 +50,7 @@ export const getLesson = asyncHandler(async (req, res) => {
     Progress.findOneAndUpdate({ userId: req.user.id, lessonId: lesson._id }, { $setOnInsert: { completed: false } }, { upsert: true, new: true }),
   ]);
   await User.updateOne({ _id: req.user.id }, { lastLessonId: lesson._id });
+  logActivity(req.user.id, 'lesson', lesson.title);
   res.json({
     ...lesson.toJSON(),
     quiz: lesson.quiz.map(({ q, o, p }) => ({ q, o, p })),
@@ -81,6 +83,10 @@ export const submitQuiz = asyncHandler(async (req, res) => {
   let xpGained = 0;
   if (score >= PASS_SCORE && !progress.completed) { progress.completed = true; progress.xp = lesson.xp; xpGained = lesson.xp; }
   await progress.save();
+  logActivity(req.user.id, 'quiz', lesson.title, { score, xp: xpGained });
 
   res.json({ score, passed: score >= PASS_SCORE, xpGained, results });
 });
+
+/** The student's own activity: streak, totals and a day-by-day log. */
+export const myActivity = asyncHandler(async (req, res) => res.json(await activityFor(req.user.id)));

@@ -1,3 +1,4 @@
+import { logActivity } from '../services/activity.service.js';
 import { Composition } from '../models/index.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { httpError } from '../utils/httpError.js';
@@ -18,7 +19,9 @@ export const analyze = asyncHandler(async (req, res) => {
 });
 
 export const createComposition = asyncHandler(async (req, res) => {
-  res.status(201).json((await Composition.create({ ...req.body, userId: req.user.id })).toJSON());
+  const doc = await Composition.create({ ...req.body, userId: req.user.id });
+  logActivity(req.user.id, 'song', doc.title);
+  res.status(201).json(doc.toJSON());
 });
 
 export const listCompositions = asyncHandler(async (req, res) => {

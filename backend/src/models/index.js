@@ -8,3 +8,4 @@ export { Classroom } from './classroom.model.js';
 export { Prompt, PROMPT_POPULATE, toPromptDto } from './prompt.model.js';
 export { Song } from './song.model.js';
 export { Composition } from './composition.model.js';
+export { Activity } from './activity.model.js';

@@ -40,6 +40,7 @@ Built as a production-minded MVP: **REST API + MongoDB (Mongoose) + React**, lay
 |---|---|
 | **Learning** | 11 courses → units → 83 lessons (338 questions and quizzes, about 14 hours): basics, scales and intervals, harmony, building chords by tones, advanced harmony, keys and modes, songwriting, chords for songs, rhythm and form, styles and eras, ear training. Each lesson has playable piano examples, a short graded quiz with an explanation after every answer, XP, and "continue where I stopped" |
 | **Library** | Pick a root and a chord type (19) or a scale/mode (14): the keyboard shows it instantly, with all inversions, formulas and diatonic chords |
+| **My area** | Per-student page: day streak, totals, 14-day activity chart and a day-by-day log of lessons, quizzes, questions and songs (`GET /api/me/activity`) |
 | **Piano game** | A rhythm game: notes fall down 8 lanes (or 13 with black keys) and the player presses the matching key (computer keys or touch) in time. Seven traditional / public-domain tunes, a tune editor (note buttons, durations, rests, tempo) whose songs are saved in the browser, three speeds, score, combo, stars and a personal best |
 | **Practice** | Free three-to-five-octave piano and an ear trainer (intervals, major or minor) |
 | **AI teacher** (task requirement) | Choose a category and sub-category, write a question, get a teacher-style answer. Prompt and response are stored per user as learning history |
@@ -132,7 +133,7 @@ Copy `backend/.env.example` to `backend/.env`. **Never commit `.env`** (it is in
 | `JWT_SECRET` | Signing key for JWTs (use a long random value) |
 | `GEMINI_API_KEY` | Optional. Google Gemini key (preferred provider) |
 | `GEMINI_API_KEYS` | Optional. Several Gemini keys, comma separated. A key that is out of quota (429) or rejected (401/403) is skipped and the next one is used; requests are spread across the keys |
-| `GEMINI_MODEL` | Default `gemini-2.5-flash` (other models are tried automatically if it is busy) |
+| `GEMINI_MODEL` | Default `gemini-3.8-flash` (older 1.x/2.x names are ignored, Google retired them) (other models are tried automatically if it is busy) |
 | `OPENAI_API_KEY` | Optional alternative provider (keys starting with `sk-`) |
 | `OPENAI_MODEL` | Default `gpt-4o-mini` |
 | `ADMIN_PHONE`, `ADMIN_PASSWORD` | Admin account created on first start. Change before deploying |

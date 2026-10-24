@@ -233,7 +233,7 @@ export default function Game() {
             <p>שמי את שתי הידיים על השורה האמצעית, ככה שכל האצבעות מוכנות מראש: ביד שמאל הזרת על <bdi dir="ltr">A</bdi>, הקמיצה על <bdi dir="ltr">S</bdi>, האמה על <bdi dir="ltr">D</bdi> והאצבע המורה על <bdi dir="ltr">F</bdi>. ביד ימין המורה על <bdi dir="ltr">J</bdi>, האמה על <bdi dir="ltr">K</bdi>, ואת <bdi dir="ltr">G</bdi> ו-<bdi dir="ltr">H</bdi> לוחצים עם אותה אצבע מורה, שזזה צעד אחד. בקליטים <bdi dir="ltr">F</bdi> ו-<bdi dir="ltr">J</bdi> יש בליטה קטנה: מרגישים אותה ויודעים איפה הבית, בלי להסתכל על המקלדת. העיניים נשארות על המסך, ואחרי כל לחיצה חוזרים למקום.</p>
             <p>בתווים השחורים (למעלה בשורה <bdi dir="ltr">W E T Y U</bdi>) משתמשים באותה אצבע שנמצאת מתחת לתו, ומרימים אותה שורה אחת למעלה.</p>
           </div>
-          <div className="chips"><button className={`chip ${chromatic ? 'on' : ''}`} onClick={() => setChromatic(!chromatic)}>{chromatic ? 'עם תווים שחורים' : 'רק תווים לבנים'}</button></div>
+          <div className="chips"><button className={`chip ${chromatic ? 'on' : ''}`} onClick={() => setChromatic(!chromatic)}>{chromatic ? 'תווים שחורים: פועל' : 'תווים שחורים: כבוי'}</button></div>
           <div className="chips">{SPEEDS.map(([l, v]) => <button key={l} className={`chip ${speed === v ? 'on' : ''}`} onClick={() => setSpeed(v)}>{l}</button>)}</div>
         </section>
         <div className="songgrid">
@@ -319,7 +319,7 @@ function TuneEditor({ onSave }) {
       <h2>הלחנה שלך</h2>
       <p className="muted">בחרי משך ולחצי על התווים כדי להוסיף אותם למנגינה. אפשר להוסיף שקט, לשמוע את התוצאה, ולשמור: השיר יישאר כאן גם אחרי שסוגרים את האתר.</p>
       <div className="chips"><span className="muted">משך (בפעימות):</span>{DURS.map(([l, v]) => <button key={v} className={`chip ${dur === v ? 'on' : ''}`} onClick={() => setDur(v)}>{l}</button>)}
-        <button className={`chip ${black ? 'on' : ''}`} onClick={() => setBlack(!black)}>{black ? 'עם שחורים' : 'בלי שחורים'}</button></div>
+        <button className={`chip ${black ? 'on' : ''}`} onClick={() => setBlack(!black)}>{black ? 'תווים שחורים: פועל' : 'תווים שחורים: כבוי'}</button></div>
       <div className="notepad">{lanes.map((l) => <button key={l.semi} className={`nbtn ${l.black ? 'blk' : ''}`} onClick={() => add(l.semi)}>{l.name}</button>)}<button className="nbtn rest" onClick={() => add(null)}>שקט</button></div>
       <div className="seq" aria-live="polite">{notes.length ? notes.map(([n, d], i) => <span key={i} className="tn">{n === null ? 'שקט' : NAMES[n]}<sup>{d}</sup></span>) : <span className="muted">עוד אין תווים.</span>}</div>
       <div className="row">

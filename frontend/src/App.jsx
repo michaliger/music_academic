@@ -13,11 +13,12 @@ import Friends from './pages/Friends.jsx';
 import Classes from './pages/Classes.jsx';
 import Ask from './pages/Ask.jsx';
 import Admin from './pages/Admin.jsx';
+import Me from './pages/Me.jsx';
 import Logo from './components/Logo.jsx';
 import NotesBg from './components/NotesBg.jsx';
 import { ambient } from './music/audio.js';
 
-const TABS = [['home', 'בית'], ['map', 'מפת הלימוד'], ['library', 'ספרייה'], ['practice', 'תרגול'], ['game', 'משחק'], ['compose', 'אקורדים לשיר'], ['friends', 'חברות'], ['classes', 'כיתות'], ['ask', 'שאלי את המורה']];
+const TABS = [['home', 'בית'], ['map', 'מפת הלימוד'], ['me', 'האזור שלי'], ['library', 'ספרייה'], ['practice', 'תרגול'], ['game', 'משחק'], ['compose', 'אקורדים לשיר'], ['friends', 'חברות'], ['classes', 'כיתות'], ['ask', 'שאלי את המורה']];
 
 export default function App() {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user') || 'null'));
@@ -56,7 +57,8 @@ export default function App() {
       </header>
       {home && <Landing user={user} go={go} />}
       {!home && <main className="wide">
-        {view.tab === 'map' && <LearningMap user={user} go={go} />}
+        {view.tab === 'map' && <LearningMap user={user} go={go} focus={view.arg} />}
+        {view.tab === 'me' && <Me user={user} go={go} />}
         {view.tab === 'lesson' && <Lesson id={view.arg} go={go} />}
         {view.tab === 'library' && <Library />}
         {view.tab === 'practice' && <Practice />}

@@ -60,7 +60,7 @@ export default function Landing({ user, go }) {
               const done = all.filter((l) => l.done).length;
               return (
                 <li key={c.id}>
-                  <button className={`pathcard c${i % 5}`} onClick={() => go('map')}>
+                  <button className={`pathcard c${i % 5}`} onClick={() => go('map', c.id)}>
                     <span className="pnum">{i + 1}</span>
                     <span className="picon">{infoOf(c.name)[0]}</span>
                     <b>{c.name}</b>

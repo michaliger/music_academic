@@ -590,3 +590,19 @@ header.onhome .tab::after { background: linear-gradient(105deg, transparent 0%, 
 header nav { background: transparent !important; box-shadow: none !important; border: 0 !important; backdrop-filter: none !important; gap: .15rem; }
 button.logout { border: 0 !important; background: transparent !important; box-shadow: none !important; font-size: 1rem; font-weight: 600; }
 @media (max-width: 1450px) { header .tab { padding: .55rem .6rem; font-size: 1rem; } }
+
+/* ================= v16: calmer palette. Three colours only: violet (main), peach (warm accent), cream (paper). Mint stays for "correct" feedback. ================= */
+:root { --ink: #35305a; --indigo: #35305a; --indigo-2: #5d49b8; }
+body { background: linear-gradient(160deg, #fdfaf6, #f6f0fb 58%, #fcefe9); }
+.hero-panel, .hero-panel.fullbleed { background:
+  radial-gradient(900px 480px at 12% -10%, rgba(255,184,150,.42), transparent 62%),
+  radial-gradient(760px 420px at 95% 5%, rgba(255,214,170,.22), transparent 60%),
+  repeating-linear-gradient(180deg, transparent 0 46px, rgba(255,255,255,.05) 46px 47px),
+  linear-gradient(160deg, #5a47b5 0%, #7c61cf 52%, #c98ab0 112%); }
+.hero-panel::after { background: #ffcf9e; }
+.hero-text p { color: #f1ecff; }
+.endcta { background: linear-gradient(135deg, #5d49b8, #8a6bd6 55%, #f0a08c); }
+.notesbg span:nth-child(3n) { color: #ff9d86; } .notesbg span:nth-child(3n+1) { color: #9b86e0; } .notesbg span:nth-child(5n) { color: #e8b25a; }
+.gamecanvas { background: #3d2f7a; }
+.nbtn.blk { background: #4a3b8f; }
+header.onhome .tab.on, header.onhome .tab { text-shadow: 0 1px 8px rgba(40,25,100,.35); }

@@ -23,7 +23,7 @@ export default function Auth({ onAuth }) {
       <div className="card auth">
         <div className="auth-logo"><Logo size={72} /><h1 className="auth-name">קרשנדו</h1></div>
         <h2 className="auth-sub">עולם המוזיקה</h2>
-        <p className="muted">לומדות תאוריה מוזיקלית צעד אחר צעד, עם חברות ועם מורה</p>
+        <p className="muted">לומדות תאוריה מוזיקלית צעד אחר צעד</p>
         <form onSubmit={submit}>
           {mode === 'register' && <input placeholder="שם מלא" value={f.name} onChange={set('name')} required />}
           {mode === 'register' && <input placeholder="אימייל" type="email" dir="ltr" value={f.email} onChange={set('email')} required />}

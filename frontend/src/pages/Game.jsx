@@ -143,7 +143,7 @@ export default function Game() {
 
       // background
       const bg = ctx.createLinearGradient(0, 0, 0, H);
-      bg.addColorStop(0, '#1d1840'); bg.addColorStop(1, '#3a2c82');
+      bg.addColorStop(0, '#3d2f7a'); bg.addColorStop(1, '#6a52b8');
       ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
       for (let i = 0; i < LANES.length; i++) {
         const lit = performance.now() - (g.lit[i] || -1e9) < 180;

@@ -1,5 +1,5 @@
 // App shell: header navigation and a simple state-based router (no URL router needed).
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { ROLE_LABEL } from './utils/format.js';
 import Auth from './pages/Auth.jsx';
 import Landing from './pages/Landing.jsx';
@@ -27,6 +27,13 @@ export default function App() {
   const [view, setView] = useState(sharedLesson ? { tab: 'lesson', arg: sharedLesson } : { tab: 'home' });
   const go = (tab, arg) => { setView({ tab, arg }); window.scrollTo(0, 0); setTimeout(() => window.scrollTo(0, 0), 60); };
 
+  // every page change starts at the very top (also after slow content has loaded)
+  useLayoutEffect(() => {
+    const top = () => { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; };
+    top();
+    const t = (view.tab === 'map' && view.arg ? [] : [60, 250, 600]).map((ms) => setTimeout(top, ms));
+    return () => t.forEach(clearTimeout);
+  }, [view.tab, view.arg]);
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 40);

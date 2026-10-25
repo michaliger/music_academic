@@ -1,4 +1,4 @@
-import { User, Prompt, Progress, Lesson, Classroom, PROMPT_POPULATE, toPromptDto } from '../models/index.js';
+import { User, Prompt, Progress, Lesson, Classroom, Friendship, Song, Composition, Activity, PROMPT_POPULATE, toPromptDto } from '../models/index.js';
 import { ROLES } from '../utils/constants.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { httpError } from '../utils/httpError.js';
@@ -55,4 +55,21 @@ export const getUserPrompts = asyncHandler(async (req, res) => {
 export const listAllClasses = asyncHandler(async (_req, res) => {
   const classes = await Classroom.find().populate('teacherId', 'name').sort({ createdAt: -1 });
   res.json(classes.map((c) => ({ id: c.id, name: c.name, teacher: c.teacherId?.name, code: c.code, studentCount: c.studentIds.length })));
+});
+
+/** Deletes a user together with everything that belongs to them (progress, questions, songs, friendships, classes they teach). */
+export const deleteUser = asyncHandler(async (req, res) => {
+  const id = req.params.id;
+  if (id === req.user.id) throw httpError(400, 'אי אפשר למחוק את עצמך');
+  const user = await User.findById(id);
+  if (!user) throw httpError(404, 'משתמשת לא נמצאה');
+  await Promise.all([
+    Progress.deleteMany({ userId: id }), Prompt.deleteMany({ userId: id }), Song.deleteMany({ userId: id }),
+    Composition.deleteMany({ userId: id }), Activity.deleteMany({ userId: id }),
+    Friendship.deleteMany({ $or: [{ fromId: id }, { toId: id }] }),
+    Classroom.deleteMany({ teacherId: id }),
+    Classroom.updateMany({ studentIds: id }, { $pull: { studentIds: id } }),
+  ]);
+  await user.deleteOne();
+  res.status(204).end();
 });

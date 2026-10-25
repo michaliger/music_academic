@@ -14,7 +14,7 @@ const ENDPOINTS = [
   ['get', '/ai/status', 'Is an AI key configured? (no secrets returned)'], ['get', '/compositions', 'My compositions'], ['post', '/compositions', 'Create a composition'],
   ['get', '/compositions/{id}', 'Get a composition'], ['put', '/compositions/{id}', 'Update a composition'], ['delete', '/compositions/{id}', 'Delete a composition'],
   ['get', '/admin/overview', 'System totals (admin)'], ['get', '/admin/users', 'Users: pagination, search, role filter (admin)'],
-  ['patch', '/admin/users/{id}/role', 'Change role (admin)'], ['get', '/admin/users/{id}/prompts', 'A user\'s prompt history (admin)'],
+  ['patch', '/admin/users/{id}/role', 'Change role (admin)'], ['delete', '/admin/users/{id}', 'Delete a user and their data (admin)'], ['get', '/admin/users/{id}/prompts', 'A user\'s prompt history (admin)'],
   ['get', '/admin/classes', 'All classes (admin)'],
 ];
 

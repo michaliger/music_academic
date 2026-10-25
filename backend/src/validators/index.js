@@ -3,7 +3,9 @@ import mongoose from 'mongoose';
 import { z } from 'zod';
 import { MODES, MOODS, GENRES, ROLES } from '../utils/constants.js';
 
-const phone = z.string().regex(/^0\d{8,9}$/, 'מספר טלפון ישראלי לא תקין');
+// spaces, dashes and +972 are accepted and normalised to 05XXXXXXXX
+const cleanPhone = (v) => (typeof v === 'string' ? v.replace(/[\s\-().]/g, '').replace(/^\+?972/, '0') : v);
+const phone = z.preprocess(cleanPhone, z.string().regex(/^0\d{8,9}$/, 'מספר טלפון ישראלי לא תקין'));
 const objectId = z.string().refine(mongoose.isValidObjectId, 'מזהה לא תקין');
 const noteName = z.string().regex(/^[A-G][#b]?$/, 'סולם לא תקין');
 

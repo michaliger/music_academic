@@ -19,6 +19,7 @@ export default function Admin({ user }) {
   useEffect(() => { const t = setTimeout(load, 250); return () => clearTimeout(t); }, [page, search, role]); // eslint-disable-line
 
   async function changeRole(u, r) { try { await api(`/admin/users/${u.id}/role`, { method: 'PATCH', body: { role: r } }); load(); } catch (x) { setErr(x.message); } }
+  async function remove(u) { if (!confirm(`למחוק את ${u.name} (${u.phone}) ואת כל מה שנשמר אצלה? אי אפשר לשחזר.`)) return; try { await api(`/admin/users/${u.id}`, { method: 'DELETE' }); if (sel?.id === u.id) setSel(null); load(); } catch (x) { setErr(x.message); } }
   async function open(u) { setSel(u); setPrompts(await api(`/admin/users/${u.id}/prompts`).catch(() => [])); }
 
   return (
@@ -30,12 +31,12 @@ export default function Admin({ user }) {
           <select value={role} onChange={(e) => { setRole(e.target.value); setPage(1); }}><option value="">כל התפקידים</option>{Object.entries(ROLE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
         {err && <div className="error">{err}</div>}
         <div className="table-wrap"><table>
-          <thead><tr><th>שם</th><th>טלפון</th><th>תפקיד</th><th>שיעורים</th><th>XP</th><th>פעילות</th></tr></thead>
+          <thead><tr><th>שם</th><th>טלפון</th><th>תפקיד</th><th>שיעורים</th><th>XP</th><th>פעילות</th><th></th></tr></thead>
           <tbody>{data.users.map((u) => (
             <tr key={u.id} onClick={() => open(u)} className={sel?.id === u.id ? 'sel' : ''}>
               <td>{u.name}</td><td dir="ltr">{u.phone}</td>
               <td onClick={(e) => e.stopPropagation()}><select disabled={u.id === user.id} value={u.role} onChange={(e) => changeRole(u, e.target.value)}>{Object.entries(ROLE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></td>
-              <td>{u.completed}</td><td>{u.xp}</td><td>{daysAgo(u.lastActive)}</td></tr>))}</tbody>
+              <td>{u.completed}</td><td>{u.xp}</td><td>{daysAgo(u.lastActive)}</td><td onClick={(e) => e.stopPropagation()}><button className="ghost small danger" disabled={u.id === user.id} onClick={() => remove(u)}>מחיקה</button></td></tr>))}</tbody>
         </table></div>
         <div className="pager"><button className="ghost" disabled={page <= 1} onClick={() => setPage(page - 1)}>הקודם</button><span>{data.page} / {data.pages || 1}</span><button className="ghost" disabled={page >= data.pages} onClick={() => setPage(page + 1)}>הבא</button></div>
       </section>

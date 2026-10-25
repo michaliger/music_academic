@@ -334,18 +334,14 @@ function TuneEditor({ onSave }) {
   return (
     <section className="card tuneedit">
       <h2>הלחנה בלחיצות</h2>
-      <p className="muted">לוחצים על תו בקלידים כדי להוסיף אותו. לחיצה על תו שכבר במנגינה בוחרת אותו, ואז אפשר לשנות לו משך, להזיז אותו למעלה או למטה, או למחוק אותו. תו חדש נכנס אחרי התו שבחרת.</p>
+      <p className="muted">לוחצים על תו בקלידים כדי להוסיף אותו. לחיצה על תו שכבר במנגינה בוחרת אותו, ואז אפשר לשנות לו משך (למשל מחצי לאחד) או למחוק אותו. תו חדש נכנס אחרי התו שבחרת.</p>
       <div className="chips"><button className={`chip ${black ? 'on' : ''}`} onClick={() => setBlack(!black)}>{black ? 'תווים שחורים: פועל' : 'תווים שחורים: כבוי'}</button></div>
       <div className="notepad">{lanes.map((l) => <button key={l.semi} className={`nbtn ${l.black ? 'blk' : ''}`} onClick={() => add(l.semi)}>{l.name}</button>)}<button className="nbtn rest" onClick={() => add(null)}>שקט</button></div>
       <div className="seq" aria-live="polite">{notes.length ? notes.map(([n, d], i) => <button key={i} className={`tn ${i === sel ? 'sel' : ''}`} onClick={() => choose(i)}>{n === null ? 'שקט' : NAMES[n]}<sup>{d}</sup></button>) : <span className="muted">עוד אין תווים.</span>}</div>
       <div className="selbar">
-        <span className="muted">{sn ? `נבחר: ${sn[0] === null ? 'שקט' : NAMES[sn[0]]}` : 'משך לתו הבא:'}</span>
+        <span className="muted">{sn ? `משך התו שנבחר (${sn[0] === null ? 'שקט' : NAMES[sn[0]]}), בפעימות:` : 'משך לתו הבא, בפעימות:'}</span>
         {DURS.map(([l, v]) => <button key={v} className={`chip ${(sn ? sn[1] : dur) === v ? 'on' : ''}`} onClick={() => setDuration(v)}>{l}</button>)}
-        {sn && <>
-          <button className="ghost small" onClick={() => shift(1)} disabled={sn[0] === null}>חצי טון למעלה</button>
-          <button className="ghost small" onClick={() => shift(-1)} disabled={sn[0] === null}>חצי טון למטה</button>
-          <button className="ghost small danger" onClick={remove}>מחיקת התו</button>
-        </>}
+        {sn && <button className="ghost small danger" onClick={remove}>מחיקת התו</button>}
       </div>
       <div className="row">
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="שם לשיר" maxLength={40} />
